@@ -10,8 +10,6 @@ import java.nio.file.{InvalidPathException, Path, Paths}
 
 given [T: ConfigDecoder] => ConfigDecoder[Option[T]] {
   override def decode(raw: String): Either[ConfigError, Option[T]] = ConfigDecoder[T].decode(raw).map(Some(_))
-
-  override def isOption: Boolean = true
 }
 
 given [T: ConfigValue] => ConfigLoader[Option[T]] {
@@ -19,8 +17,6 @@ given [T: ConfigValue] => ConfigLoader[Option[T]] {
     case loader: ConfigLoader[T] => loader.load(reader).map(Some(_))
     case decoder: ConfigDecoder[T] => Left(ConfigError.other("You can only load case class!"))
   }
-
-  override def isOption: Boolean = true
 }
 
 given ConfigDecoder[String] with {

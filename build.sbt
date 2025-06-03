@@ -8,6 +8,10 @@ lazy val IntegrationTest: Configuration =
 lazy val Examples: Configuration =
   config("examples") extend Compile
 
+ThisBuild / scalacOptions ++= Seq(
+  "-deprecation"
+)
+
 lazy val root = (project in file("."))
   .configs(IntegrationTest)
   .configs(Examples)

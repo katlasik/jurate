@@ -10,8 +10,10 @@ enum Protocol derives ConfigValue:
   case HTTP
   case HTTPS
 
-enum EnumWithFields derives ConfigValue:
-  case A(value: String)
+enum User derives ConfigValue:
+  case Regular(@env("USER_EMAIL") email: String)
+  case Admin(@env("ADMIN_NAME") name: String)
+
 
 class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
@@ -36,7 +38,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     configWithNested.value should be(ConfigWithNested(NestedSeverity.Error))
   }
 
-  it should "decode simple toplevel enum" in {
+  it should "decode simple enum" in {
     given ConfigReader = ConfigReader.mocked
       .onProp("protocol", "HTTPS")
 
@@ -47,6 +49,19 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     //then
     config.value should be(Config(Protocol.HTTPS))
+  }
+
+  it should "decode simple enum regardless of case" in {
+    given ConfigReader = ConfigReader.mocked
+      .onProp("protocol", "hTtP")
+
+    case class Config(@prop("protocol") protocol: Protocol) derives ConfigValue
+
+    //when
+    val config = load[Config]
+
+    //then
+    config.value should be(Config(Protocol.HTTP))
   }
 
   it should "fail to decode enum if value is missing" in {
@@ -60,21 +75,49 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     val config = load[Config]
 
     //then
-    config.left.value should be(ConfigError.invalid("Couldn't find case Bad in enum jurata.EnumsSpec.Severity", "Bad"))
+    config.left.value should be(ConfigError.invalid("Couldn't find enum case, avaible values: Error, Warning", "Bad"))
   }
 
-  it should "fail to decode enum with fields" in {
+  it should "decode enum with fields" in {
 
     given ConfigReader = ConfigReader.mocked
-      .onEnv("ENV", "x")
+      .onEnv("ADMIN_NAME", "Jack")
 
-    case class Config(@env("ENV") value: EnumWithFields) derives ConfigValue
+    case class Config(@env("ENV") user: User) derives ConfigValue
 
     //when
     val config = load[Config]
 
     //then
-    config.left.value should be(ConfigError.other("Couldn't decode enum jurata.EnumWithFields - only decoding of enums without fields is supported"))
+    config.value should be(Config(User.Admin("Jack")))
+  }
+
+  it should "use default value if can't load value" in {
+
+    given ConfigReader = ConfigReader.mocked
+
+    case class Config(@env("ENV") user: User = User.Regular("test@acme.com")) derives ConfigValue
+
+    //when
+    val config = load[Config]
+
+    //then
+    config.value should be(Config(User.Regular("test@acme.com")))
+  }
+
+    it should "load first availble enum case" in {
+
+    given ConfigReader = ConfigReader.mocked
+      .onEnv("ADMIN_NAME", "Jack")
+      .onEnv("USER_EMAIL", "jack@acme.com")
+
+    case class Config(@env("ENV") user: User) derives ConfigValue
+
+    //when
+    val config = load[Config]
+
+    //then
+    config.value should be(Config(User.Regular("jack@acme.com")))
   }
 
 }
