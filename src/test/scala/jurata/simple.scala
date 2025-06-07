@@ -11,7 +11,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onEnv("PORT", "8888")
       .onEnv("HOST", "localhost")
 
-    case class Config(@env("PORT") port: Int, @env("HOST") host: String)derives ConfigValue
+    case class Config(@env("PORT") port: Int, @env("HOST") host: String) derives ConfigValue
 
     //when
     val config = load[Config]
@@ -66,6 +66,16 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     config.left.value should be(ConfigError.invalid("was expecting integer", "bad"))
   }
 
+  it should "fail to compile if decoder is missing" in {
+
+    //given
+    given ConfigReader = ConfigReader.mocked
+      .onEnv("PORT", "bad")
+
+    """case class Config(@env("PORT") port: Stream[Int])derives ConfigValue""" shouldNot compile
+
+  }
+
   it should "fail to load if value is missing" in {
 
     //given
@@ -99,16 +109,18 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
 
   it should "fail to load value if annotation is missing" in {
 
-    //given
+    //when 
     given ConfigReader = ConfigReader.mocked
 
     case class Config(port: Int) derives ConfigValue
 
-    //when
+    //then
     val config = load[Config]
 
-    //then
-    config.left.value should be(ConfigError.other("Couldn't find annotations on field: 'port', not sure how to load value"))
+    config.left.value.getMessage.lines.toList should contain(
+      "No annotations found for field: port"
+    )
+    
   }
 
   it should "aggregate errors" in {
@@ -125,8 +137,6 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     //when
     val config = load[Config]
-
-    config.left.value.getMessage.lines.toList.forEach(println)
 
     //then
     config.left.value.getMessage.lines.toList should contain allOf(
