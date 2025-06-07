@@ -125,8 +125,8 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     //given
     sealed trait MessagingConfig derives ConfigValue
-    case class KafkaConfig(@env("KAFKA_BROKER") broker: String) extends MessagingConfig derives ConfigValue
-    case class Redis(@env("REDIS_CLUSTER" )cluster: String) extends MessagingConfig derives ConfigValue
+    case class KafkaConfig(@env("KAFKA_BROKER") broker: String) extends MessagingConfig
+    case class Redis(@env("REDIS_CLUSTER" )cluster: String) extends MessagingConfig
 
     case class Config(messaging: MessagingConfig) derives ConfigValue
 

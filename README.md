@@ -23,12 +23,10 @@ load[Config] //Right(Config(localhost,8080,None,true, DbConfig(*****, user)))
 # Loading config values
 Currently, library only supports loading values from environment variables or system properties. To load value into field from environment variable, use `@env` annotation. To load value from system property, use `@prop` annotation.
 
-```scala
 
-
-# Fallbacks
-You can provide multiple annotations to a field. The library will try to load the value from the first annotation on the left, and if it fails, it will try the next one.
-You can also provide default value for a field which will be used if the value is not found for any of the annotations.
+## Fallbacks
+You can provide multiple annotations to a field. The library will try to load the value from the first annotation on the left, and if it's not available, it will try the next one.
+You can also provide default value for a field which will be used if the value is not found.
 
 ```scala
 case class Config(
@@ -36,10 +34,9 @@ case class Config(
 ) derives ConfigValue
 ```
 
-In this example library will first check if system property `debug.email` exists, then it will look for environment variables EMAIL and ADMIN_EMAIL. If non are found default value 
-`noreply@mydomain.com` will be used.
+In this example library will first check if system property `debug.email` exists, then it will look for environment variables EMAIL and ADMIN_EMAIL. If none are found default value `noreply@mydomain.com` will be used.
 
-# Optional values
+## Optional values
 You can make field optional by using `Option` type. If the value is not found, the field will be set to `None`.
 
 ```scala
@@ -48,7 +45,7 @@ case class Config(
 ) derives ConfigValue
 ```
 
-# Nested case classes
+## Nested case classes
 You can use nested case classes to organize your config. Every nested case class has to derive typeclass `ConfigValue`.
 
 ```scala
@@ -64,7 +61,40 @@ case class Config (
 ) derives ConfigValue
 ```
 
-# Secret values
+## Enums
+You can load values of enums using `@env` or `@prop` annotations. The library will automatically convert the string value to the enum value. Searching for the right enum case is case insensitive.
+
+```scala
+enum Environment {
+  case DEV, PROD, STAGING
+}
+
+case class Config(
+  @env("ENV") env: Environment
+) derives ConfigValue
+```
+
+## Subclasses
+You can load configuraton using sealed traits. The result of loading sealed trait will be first subclass to load successfully.
+
+```scala
+sealed trait MessagingConfig derives ConfigValue
+case class LiveConfig(@env("BROKER_ADDRESS") brokerAddress: String) extends MessagingConfig
+case class TestConfig(@prop("BROKER_NAME" ) brokerName: String) extends MessagingConfig
+
+case class Config(messaging: MessagingConfig) derives ConfigValue
+```
+
+The same works for enums with fields
+```scala
+enum MessagingConfig derives ConfigValue: 
+  case LiveConfig(@env("BROKER_ADDRESS") brokerAddress: String)
+  case TestConfig(@prop("BROKER_NAME" ) brokerName: String)
+
+case class Config(messaging: MessagingConfig) derives ConfigValue
+```
+
+## Secret values
 If don't want to expose your secret values in logs or error messages, you can use `Secret` type. It will hide the value when printed.
 
 ```scala
@@ -95,16 +125,21 @@ given ConfigDecoder[MyClass] with {
 }
 ```
 
+# Testing
 
-# Enums
-You can load values of enums using `@env` or `@prop` annotations. The library will automatically convert the string value to the enum value.
+You can override behavior of `load` function by providing instance of `ConfigReader`.
+
+For test you can use mocked ConfigReader:
+
 
 ```scala
-enum Environment {
-  case DEV, PROD, STAGING
-}
+case class DbConfig(@env("DATABASE_HOST") host: String, @prop("dbpass") password: String)
 
-case class Config(
-  @env("ENV") env: Environment
-) derives ConfigValue
+given ConfigReader = ConfigReader
+  .mocked
+  .onEnv("DATABASE_HOST", "localhost")
+  .onProp("dbpass", "mypass")
+
+load[DbConfig] // Right(DbConfig("localhost", "mypass"))
+
 ```
