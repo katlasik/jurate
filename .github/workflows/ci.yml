@@ -1,0 +1,34 @@
+name: Scala CI
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin) with sbt cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: sbt
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Verify code format
+        run: sbt scalafmtCheck
+
+      - name: Compile
+        run: sbt compile
+
+      - name: Run Unit Tests
+        run: sbt test
+
+      - name: Run Integration Tests
+        run: sbt integrationTest
+
