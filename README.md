@@ -27,11 +27,11 @@ You can also provide a default value for a field, which will be used if the valu
 
 ```scala
 case class Config(
-   @prop("debug.email") @env("EMAIL") @env("ADMIN_EMAIL") email: String = "noreply@mydomain.com"
+   @prop("debug.email") @env("EMAIL") @env("ADMIN_EMAIL") email: String = "foo@bar.com"
 ) derives ConfigValue
 ```
 
-In this example library will first check if system property `debug.email` exists, then it will look for environment variables EMAIL and ADMIN_EMAIL. If none are found default value `noreply@mydomain.com` will be used.
+In this example library will first check if system property `debug.email` exists, then it will look for environment variables EMAIL and ADMIN_EMAIL. If none are found default value `foo@bar.com` will be used.
 
 ## Optional values
 You can make field optional by using `Option` type. If the value is not found, the field will be set to `None`.
