@@ -4,7 +4,7 @@ import jurata.*
 
 import scala.reflect.ClassTag
 
-private[jurata] def traverse[T: ClassTag](
+private[jurata] def aggregate[T: ClassTag](
     values: Seq[Either[ConfigError, T]]
 ): Either[ConfigError, Seq[T]] =
   values.foldLeft(Right(Seq.empty[T]): Either[ConfigError, Seq[T]]) {

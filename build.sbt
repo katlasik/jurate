@@ -9,7 +9,10 @@ lazy val Examples: Configuration =
   config("examples") extend Compile
 
 ThisBuild / scalacOptions ++= Seq(
-  "-deprecation"
+  "-Wunused:all",      // Enable all unused warnings
+  "-Wvalue-discard",   // Warn on unused expression results
+  "-deprecation",      // Warn about deprecated APIs
+  "-feature"           // Warn about advanced language features
 )
 
 lazy val root = (project in file("."))

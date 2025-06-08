@@ -6,7 +6,6 @@ import org.scalatest.EitherValues
 
 import java.net.{InetAddress, URI}
 import java.nio.file.{Path, Paths}
-import java.io.File
 import java.util.UUID
 import org.scalatest.prop.TableDrivenPropertyChecks
 

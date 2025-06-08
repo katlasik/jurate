@@ -17,9 +17,10 @@ case class Config(
 @main
 def app(): Unit =
 
-  System.getProperties.entrySet().forEach(println)
-
   load[Config] match {
     case Right(config) => println(config)
-    case Left(error)   => throw new RuntimeException("Failed to load config", error)
+    case Left(error) =>
+      System.err.print(error.getMessage)
+      System.exit(1)
+
   }

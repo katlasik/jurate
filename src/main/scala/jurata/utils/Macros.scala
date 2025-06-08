@@ -12,10 +12,12 @@ private[jurata] case class FieldMetadata(
 
 private[jurata] case class TypeMetadata[T](
     enumCases: Option[Array[T]],
-    annotations: List[ConfigAnnotation]
+    annotations: List[ConfigAnnotation],
+    name: String
 )
 
 private[jurata] object Macros {
+
   inline def fieldMetadata[A] = ${
     fieldMetadataImpl[A]
   }
@@ -24,21 +26,23 @@ private[jurata] object Macros {
     typeMetadataImpl[A]
   }
 
-  def filterAnnotation(using quotes: Quotes)(a: quotes.reflect.Term): Boolean =
+  private def filterAnnotation(using
+      quotes: Quotes
+  )(a: quotes.reflect.Term): Boolean =
     import quotes.reflect.*
     scala.util
       .Try(a.tpe <:< TypeRepr.of[jurata.ConfigAnnotation])
       .toOption
       .contains(true)
 
-  def exprOfOption[T: Type](using
+  private def toExprOpt[T: Type](using
       quotes: Quotes
   )(optExpr: Option[Expr[T]]): Expr[Option[T]] =
     optExpr match
       case Some(e) => '{ Some($e) }
       case None => '{ None }
 
-  def fieldMetadataImpl[A: Type](using
+  private def fieldMetadataImpl[A: Type](using
       quotes: Quotes
   ): Expr[Map[String, FieldMetadata]] =
     import quotes.reflect.*
@@ -81,7 +85,7 @@ private[jurata] object Macros {
                 .reverse
             )
 
-            val defaultValue = exprOfOption(default(fieldIdx))
+            val defaultValue = toExprOpt(default(fieldIdx))
 
             '{
               FieldMetadata(
@@ -98,18 +102,12 @@ private[jurata] object Macros {
       Map.from($values)
     }
 
-  def typeMetadataImpl[A: Type](using quotes: Quotes): Expr[TypeMetadata[A]] =
+  private def typeMetadataImpl[A: Type](using
+      quotes: Quotes
+  ): Expr[TypeMetadata[A]] =
     import quotes.reflect.*
 
     val typeSymbol = TypeRepr.of[A].typeSymbol
-
-    val name = Expr(typeSymbol.name)
-
-    val debug = Expr.ofList(
-      typeSymbol.annotations
-        .map(_.asExpr)
-        .reverse
-    )
 
     val annotations = Expr.ofList(
       typeSymbol.annotations
@@ -123,13 +121,15 @@ private[jurata] object Macros {
     val valuesMethod =
       typeSymbol.companionModule.methodMember("values").headOption
 
-    val enumCases: Expr[Option[Array[A]]] = exprOfOption(
+    val enumCases: Expr[Option[Array[A]]] = toExprOpt(
       valuesMethod.map { m =>
         Select.unique(companion, m.name).asExprOf[Array[A]]
       }
     )
 
+    val name = Expr(typeSymbol.name)
+
     '{
-      TypeMetadata[A]($enumCases, $annotations)
+      TypeMetadata[A]($enumCases, $annotations, $name)
     }
 }

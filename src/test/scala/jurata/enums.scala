@@ -75,7 +75,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     val config = load[Config]
 
     //then
-    config.left.value should be(ConfigError.invalid("Couldn't find enum case, avaible values: Error, Warning", "Bad"))
+    config.left.value should be(ConfigError.invalid("couldn't find case for enum Severity (available values: Error, Warning)", "Bad"))
   }
 
   it should "decode enum with fields" in {

@@ -63,17 +63,11 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     val config = load[Config]
 
     //then
-    config.left.value should be(ConfigError.invalid("was expecting integer", "bad"))
+    config.left.value should be(ConfigError.invalid("can't decode integer", "bad"))
   }
 
   it should "fail to compile if decoder is missing" in {
-
-    //given
-    given ConfigReader = ConfigReader.mocked
-      .onEnv("PORT", "bad")
-
-    """case class Config(@env("PORT") port: Stream[Int])derives ConfigValue""" shouldNot compile
-
+    """case class Config(@env("PORT") port: Stream[Int]) derives ConfigValue""" shouldNot compile
   }
 
   it should "fail to load if value is missing" in {
@@ -140,7 +134,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     //then
     config.left.value.getMessage.lines.toList should contain allOf(
-      "Loaded invalid value: was expecting integer, received value: 'bad'",
+      "Loaded invalid value: can't decode integer, received value: 'bad'",
       "Missing environment variable HOST, missing system property sys.host",
       "Missing environment variable SECRET"
     )
