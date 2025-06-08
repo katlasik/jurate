@@ -9,8 +9,11 @@ import java.nio.file.{Path, Paths}
 import java.util.UUID
 import org.scalatest.prop.TableDrivenPropertyChecks
 
-class DecodersSpec extends AnyFlatSpec with Matchers with EitherValues with TableDrivenPropertyChecks {
-
+class DecodersSpec
+    extends AnyFlatSpec
+    with Matchers
+    with EitherValues
+    with TableDrivenPropertyChecks {
 
   behavior of "ConfigDecoder for String"
   it should "decode String" in {
@@ -125,7 +128,8 @@ class DecodersSpec extends AnyFlatSpec with Matchers with EitherValues with Tabl
 
   behavior of "ConfigDecoder for BigInt"
   it should "decode BigInt" in {
-    given ConfigReader = ConfigReader.mocked.onEnv("BIGINT", "9876543210123456789")
+    given ConfigReader =
+      ConfigReader.mocked.onEnv("BIGINT", "9876543210123456789")
 
     case class Config(@env("BIGINT") value: BigInt) derives ConfigValue
 
@@ -185,7 +189,8 @@ class DecodersSpec extends AnyFlatSpec with Matchers with EitherValues with Tabl
   }
 
   it should "fail to decode invalid Path" in {
-    given ConfigReader = ConfigReader.mocked.onEnv("PATH", "\u0000")  // Invalid path string
+    given ConfigReader =
+      ConfigReader.mocked.onEnv("PATH", "\u0000") // Invalid path string
 
     case class Config(@env("PATH") value: Path) derives ConfigValue
 
@@ -193,29 +198,29 @@ class DecodersSpec extends AnyFlatSpec with Matchers with EitherValues with Tabl
   }
 
   behavior of "ConfigDecoder for Boolean"
-    
-    it should "correctly decode valid boolean strings" in {
 
-      val validBooleans = Table(
-        ("input", "expected"),
-        ("true", true),
-        ("yes", true),
-        ("1", true),
-        ("false", false),
-        ("no", false),
-        ("0", false),
-        ("TrUe", true),
-        ("FaLsE", false)
-      )
+  it should "correctly decode valid boolean strings" in {
 
-      forAll(validBooleans) { (input: String, expected: Boolean) =>
-        given ConfigReader = ConfigReader.mocked.onEnv("FLAG", input)
+    val validBooleans = Table(
+      ("input", "expected"),
+      ("true", true),
+      ("yes", true),
+      ("1", true),
+      ("false", false),
+      ("no", false),
+      ("0", false),
+      ("TrUe", true),
+      ("FaLsE", false)
+    )
 
-        case class Config(@env("FLAG") value: Boolean) derives ConfigValue
+    forAll(validBooleans) { (input: String, expected: Boolean) =>
+      given ConfigReader = ConfigReader.mocked.onEnv("FLAG", input)
 
-        load[Config].value shouldBe Config(expected)
-      }
+      case class Config(@env("FLAG") value: Boolean) derives ConfigValue
+
+      load[Config].value shouldBe Config(expected)
     }
+  }
 
   it should "fail to decode invalid Boolean" in {
     given ConfigReader = ConfigReader.mocked.onEnv("FLAG", "maybe")

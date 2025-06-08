@@ -20,7 +20,7 @@ case class Config(
   @env("ENV") env: Environment
 ) derives ConfigValue
 
-@main def run(): Unit = {
+@main def simpleApp(): Unit = {
   load[Config] match {
     case Right(config) =>
       println(s"Starting app on ${config.host}:${config.port} on env ${config.env}")
