@@ -1,10 +1,13 @@
 package jurata
 
+import jurata.utils.aggregate
+
 import java.io.File
 import java.net.{InetAddress, URI, UnknownHostException}
 import java.util.UUID
 import scala.annotation.implicitNotFound
 import java.nio.file.{InvalidPathException, Path, Paths}
+import scala.collection.Factory
 
 given [T: ConfigDecoder] => ConfigDecoder[Option[T]] {
   override def decode(raw: String): Either[ConfigError, Option[T]] =
@@ -19,6 +22,22 @@ given [T: ConfigValue] => ConfigLoader[Option[T]] =
         Left(ConfigError.other("You can only load case classes!"))
     }
   )
+
+given [T: ConfigValue, C[T] <: Seq[T]](
+  using 
+  cv: ConfigValue[T],
+  factory: Factory[T, C[T]],
+  eitherFactory: Factory[Either[ConfigError, T], C[Either[ConfigError, T]]]
+): ConfigDecoder[C[T]] =
+  raw =>
+
+    cv match {
+      case decoder: ConfigDecoder[T] =>
+        val values: C[Either[ConfigError, T]] = raw.split(",").map(_.trim).map(decoder.decode).to(
+          eitherFactory
+        )
+        aggregate(values)
+    }
 
 given ConfigDecoder[String] with {
   override def decode(raw: String): Either[ConfigError, String] = Right(raw)
@@ -136,6 +155,8 @@ given ConfigDecoder[URI] with {
           ConfigError.invalid(s"can't decode URI value: ${e.getMessage}", raw)
         )
 }
+
+
 
 def load[C](using
     @implicitNotFound(

@@ -1,3 +1,5 @@
+package jurata
+
 import jurata.{*, given}
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AnyFlatSpec
@@ -72,7 +74,11 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
   }
 
   it should "fail to compile if decoder is missing" in {
-    """case class Config(@env("PORT") port: Stream[Int]) derives ConfigValue""" shouldNot compile
+    //given
+    class Foo
+
+    //then
+    """case class Config(@env("PORT") port: Foo) derives ConfigValue""" shouldNot compile
   }
 
   it should "fail to load if value is missing" in {

@@ -3,7 +3,6 @@ package jurata
 import jurata.utils.*
 import jurata.utils.Macros.*
 
-import scala.annotation.implicitNotFound
 import scala.deriving.Mirror
 import scala.compiletime.*
 
