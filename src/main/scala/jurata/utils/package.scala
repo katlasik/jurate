@@ -1,14 +1,13 @@
 package jurata.utils
 
 import jurata.*
+import scala.collection.Factory
 
-import scala.reflect.ClassTag
-
-private[jurata] def aggregate[T: ClassTag](
-    values: Seq[Either[ConfigError, T]]
-): Either[ConfigError, Seq[T]] =
-  values.foldLeft(Right(Seq.empty[T]): Either[ConfigError, Seq[T]]) {
-    case (acc, Right(value)) => acc.map(_ :+ value)
+private[jurata] def aggregate[T, C[T] <: Seq[T]](
+    values: C[Either[ConfigError, T]]
+)(using factory: Factory[T, C[T]]): Either[ConfigError, C[T]] =
+  values.foldLeft(Right(factory.newBuilder.result()): Either[ConfigError, C[T]]) {
+    case (acc, Right(value)) => acc.map(v => (v :+ value).to(factory))
     case (Left(err), Left(other)) => Left(err ++ other)
     case (_, Left(err)) => Left(err)
   }
