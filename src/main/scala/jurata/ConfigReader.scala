@@ -19,7 +19,7 @@ trait ConfigReader {
 
         maybeValue match
           case Some(value) => Right(value)
-          case None        => iterate(values.tail)
+          case None => iterate(values.tail)
 
     iterate(annotations)
 

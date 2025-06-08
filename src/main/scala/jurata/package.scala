@@ -1,9 +1,7 @@
 package jurata
 
-import jurata.{ConfigDecoder, ConfigError, ConfigLoader, ConfigValue}
-
 import java.io.File
-import java.net.{InetAddress, UnknownHostException}
+import java.net.{InetAddress, URI, UnknownHostException}
 import java.util.UUID
 import scala.annotation.implicitNotFound
 import java.nio.file.{InvalidPathException, Path, Paths}
@@ -16,7 +14,7 @@ given [T: ConfigDecoder] => ConfigDecoder[Option[T]] {
 given [T: ConfigValue] => ConfigLoader[Option[T]] {
   override def load(reader: ConfigReader): Either[ConfigError, Option[T]] =
     ConfigValue[T] match {
-      case loader: ConfigLoader[T]   => loader.load(reader).map(Some(_))
+      case loader: ConfigLoader[T] => loader.load(reader).map(Some(_))
       case decoder: ConfigDecoder[T] =>
         Left(ConfigError.other("You can only load case class!"))
     }
@@ -86,24 +84,33 @@ given ConfigDecoder[InetAddress] with {
   override def decode(raw: String): Either[ConfigError, InetAddress] = try
     Right(InetAddress.getByName(raw))
   catch
-    case _: UnknownHostException =>
-      Left(ConfigError.invalid(s"Can't decode InetAddress value", raw))
+    case e: UnknownHostException =>
+      Left(
+        ConfigError.invalid(
+          s"Can't decode InetAddress value: ${e.getMessage}",
+          raw
+        )
+      )
 }
 
 given ConfigDecoder[UUID] with {
   override def decode(raw: String): Either[ConfigError, UUID] = try
     Right(UUID.fromString(raw))
   catch
-    case _: IllegalArgumentException =>
-      Left(ConfigError.invalid(s"Can't decode UUID value", raw))
+    case e: IllegalArgumentException =>
+      Left(
+        ConfigError.invalid(s"Can't decode UUID value: ${e.getMessage}", raw)
+      )
 }
 
 given ConfigDecoder[Path] with {
   override def decode(raw: String): Either[ConfigError, Path] = try
     Right(Paths.get(raw))
   catch
-    case _: InvalidPathException =>
-      Left(ConfigError.invalid(s"Can't decode Path value", raw))
+    case e: InvalidPathException =>
+      Left(
+        ConfigError.invalid(s"Can't decode Path value: ${e.getMessage}", raw)
+      )
 }
 
 given ConfigDecoder[File] with {
@@ -120,13 +127,23 @@ given ConfigDecoder[Boolean] with {
       case _ => Left(ConfigError.invalid(s"Can't decode boolean value", raw))
 }
 
+given ConfigDecoder[URI] with {
+  override def decode(raw: String): Either[ConfigError, URI] =
+    try Right(URI.create(raw))
+    catch
+      case e: IllegalArgumentException =>
+        Left(
+          ConfigError.invalid(s"Can't decode URI value: ${e.getMessage}", raw)
+        )
+}
+
 def load[C](using
     @implicitNotFound(
       "Can't find required givens. Did you forget to use derives for your case classes?"
     ) cv: ConfigValue[C],
     reader: ConfigReader
 ): Either[ConfigError, C] = cv match {
-  case loader: ConfigLoader[C]   => loader.load(reader)
+  case loader: ConfigLoader[C] => loader.load(reader)
   case decoder: ConfigDecoder[C] =>
     Left(ConfigError.other("You can only load case class!"))
 }

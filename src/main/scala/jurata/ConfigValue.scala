@@ -33,7 +33,7 @@ object ConfigValue:
 
   inline given derived[A](using mirror: Mirror.Of[A]): ConfigValue[A] =
     inline mirror match
-      case sum: Mirror.SumOf[A]         => derivedMirrorSum[A](sum)
+      case sum: Mirror.SumOf[A] => derivedMirrorSum[A](sum)
       case product: Mirror.ProductOf[A] => derivedMirrorProduct[A](product)
 
   private inline def derivedMirrorProduct[T](
@@ -79,11 +79,11 @@ object ConfigValue:
               )
             else
               reader.read(fieldMetadata.annotations) match {
-                case Right(raw)                       => decoder.decode(raw)
+                case Right(raw) => decoder.decode(raw)
                 case Left(e) if e.onlyContainsMissing =>
                   fieldMetadata.default match {
                     case Some(d) => Right(d)
-                    case None    =>
+                    case None =>
                       inline erasedValue[p] match {
                         case _: Option[_] =>
                           Right(None)
@@ -96,11 +96,11 @@ object ConfigValue:
 
           case loader: ConfigLoader[p] =>
             loader.load(reader) match {
-              case Right(v)                         => Right(v)
+              case Right(v) => Right(v)
               case Left(e) if e.onlyContainsMissing =>
                 fieldMetadata.default match {
                   case Some(d) => Right(d)
-                  case None    =>
+                  case None =>
                     inline erasedValue[p] match {
                       case _: Option[_] =>
                         Right(None)
@@ -146,7 +146,7 @@ object ConfigValue:
             configValue match {
               case loader: ConfigLoader[`subtype`] =>
                 loader.load(reader).map(_.asInstanceOf[T]) match {
-                  case Right(r)                         => Right(r)
+                  case Right(r) => Right(r)
                   case Left(e) if e.onlyContainsMissing =>
                     deriveSum[T, tail, SuperTypeLabel](
                       meta,
@@ -170,7 +170,7 @@ object ConfigValue:
               .map(v =>
                 product.fromProduct(Tuple.fromArray(v.toArray)).asInstanceOf[T]
               ) match {
-              case Right(r)                         => Right(r)
+              case Right(r) => Right(r)
               case Left(e) if e.onlyContainsMissing =>
                 deriveSum[T, tail, SuperTypeLabel](
                   meta,
@@ -188,7 +188,7 @@ object ConfigValue:
 
     typeMeta.enumCases match
       case Some(values) => new EnumConfigDecoder(values)
-      case _            =>
+      case _ =>
         val read: ConfigReader => Either[ConfigError, T] = reader =>
           deriveSum[T, sum.MirroredElemTypes, sum.MirroredLabel](
             fieldMetadata[T],

@@ -4,8 +4,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.EitherValues
 
-import java.net.InetAddress
-import java.nio.file.{Paths, Path}
+import java.net.{InetAddress, URI}
+import java.nio.file.{Path, Paths}
 import java.io.File
 import java.util.UUID
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -239,6 +239,27 @@ class DecodersSpec extends AnyFlatSpec with Matchers with EitherValues with Tabl
     given ConfigReader = ConfigReader.mocked.onEnv("OPT", "not_a_number")
 
     case class Config(@env("OPT") value: Option[Int]) derives ConfigValue
+
+    load[Config].left.value shouldBe a[ConfigError]
+  }
+
+  behavior of "ConfigDecoder for URI"
+  it should "decode URI" in {
+    val uriStr = "http://example.com/resource"
+
+    given ConfigReader = ConfigReader.mocked.onEnv("URI", uriStr)
+
+    case class Config(@env("URI") value: URI) derives ConfigValue
+
+    load[Config].value shouldBe Config(URI.create(uriStr))
+  }
+
+  it should "fail to decode URI when it's incorrect" in {
+    val uriStr = "http:// "
+
+    given ConfigReader = ConfigReader.mocked.onEnv("URI", uriStr)
+
+    case class Config(@env("URI") value: URI) derives ConfigValue
 
     load[Config].left.value shouldBe a[ConfigError]
   }

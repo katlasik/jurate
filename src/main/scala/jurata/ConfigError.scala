@@ -41,7 +41,7 @@ object ConfigError {
   ): String = {
     annotations
       .map {
-        case env(name)  => s"missing environment variable $name"
+        case env(name) => s"missing environment variable $name"
         case prop(path) => s"missing system property $path"
       }
       .mkString(", ")

@@ -1,7 +1,6 @@
 # Intro
-Jurata is simple library for instantiating case class instances from environment variables or system properties. 
-You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then use `derives keyword` to derive typeclass `ConfigValue` for your case class.
-Finally, you can load your config using `load` method. The library will take care of the rest.
+Jurata is a simple library for instantiating case class instances from environment variables and system properties. You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then use the `derives` keyword to derive the typeclass `ConfigValue` for your case class.
+Finally, you can load your config using `load` method.
 
 ```scala
 case class DbConfig (
@@ -20,13 +19,11 @@ case class Config(
 load[Config] //Right(Config(localhost,8080,None,true, DbConfig(*****, user)))
 ```
 
-# Loading config values
-Currently, library only supports loading values from environment variables or system properties. To load value into field from environment variable, use `@env` annotation. To load value from system property, use `@prop` annotation.
+## Usage
 
-
-## Fallbacks
-You can provide multiple annotations to a field. The library will try to load the value from the first annotation on the left, and if it's not available, it will try the next one.
-You can also provide default value for a field which will be used if the value is not found.
+To load a value into a field from an environment variable, use the `@env` annotation. To load a value from a system property, use the `@prop` annotation.
+You can provide multiple annotations to a field. The library will try to load the value from the first annotation on the left, and if it fails, it will try the next one.
+You can also provide a default value for a field, which will be used if the value is not found for any of the annotations.
 
 ```scala
 case class Config(
@@ -62,7 +59,7 @@ case class Config (
 ```
 
 ## Enums
-You can load values of enums using `@env` or `@prop` annotations. The library will automatically convert the string value to the enum value. Searching for the right enum case is case insensitive.
+You can load values of enums using `@env` or `@prop` annotations. The library will automatically convert the string value to the enum value. Searching for the right enum case is case-insensitive.
 
 ```scala
 enum Environment {
@@ -75,7 +72,7 @@ case class Config(
 ```
 
 ## Subclasses
-You can load configuraton using sealed traits. The result of loading sealed trait will be first subclass to load successfully.
+The result of loading sealed trait will be first subclass to load successfully.
 
 ```scala
 sealed trait MessagingConfig derives ConfigValue
@@ -124,6 +121,8 @@ given ConfigDecoder[MyClass] with {
   }
 }
 ```
+
+Library provides default decoders for common types like `UUID`, `Path`, `URI` etc.
 
 # Testing
 

@@ -36,7 +36,7 @@ private[jurata] object Macros {
   )(optExpr: Option[Expr[T]]): Expr[Option[T]] =
     optExpr match
       case Some(e) => '{ Some($e) }
-      case None    => '{ None }
+      case None => '{ None }
 
   def fieldMetadataImpl[A: Type](using
       quotes: Quotes
@@ -57,12 +57,12 @@ private[jurata] object Macros {
               defaultMethod.paramSymss.headOption.filter(_.forall(_.isType))
             tParams match
               case Some(tParams) => TypeApply(base, tParams.map(TypeTree.ref))
-              case _             => base
+              case _ => base
           }
 
           defaultMethod.tree match {
             case tree: DefDef => tree.rhs.getOrElse(callDefault)
-            case _            => callDefault
+            case _ => callDefault
           }
         }
         .map(_.asExprOf[Any])
