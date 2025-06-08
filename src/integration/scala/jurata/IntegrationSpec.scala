@@ -60,4 +60,28 @@ class IntegrationSpec extends AnyFlatSpec with Matchers with EitherValues {
 
   }
 
+  it should "fail if unable to load configuration" in {
+
+    //given
+    val logger = StringLogger()
+
+    //when
+    val process = Process(
+      """sbt "integration:runMain jurata.app"""",
+      None
+    )
+    val result = process.run(logger)
+
+    //then
+    result.exitValue() should be(1)
+    logger.getOutput should include("Missing environment variable PORT, missing system property http.port")
+    logger.getOutput should include("Missing environment variable HOST, missing system property http.host")
+    logger.getOutput should include("Missing environment variable DB_HOST, missing system property db.host")
+    logger.getOutput should include("Missing environment variable DB_PORT, missing system property db.port")
+    logger.getOutput should include("Missing environment variable DB_USER, missing system property db.user")
+    logger.getOutput should include("Missing environment variable DB_PASSWORD, missing system property db.password")
+
+
+  }
+
 }

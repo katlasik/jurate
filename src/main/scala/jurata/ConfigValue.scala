@@ -5,12 +5,11 @@ import jurata.utils.Macros.*
 
 import scala.deriving.Mirror
 import scala.compiletime.*
-import scala.annotation.meta.field
 
 trait ConfigValue[C]
 
-trait ConfigLoader[C] extends ConfigValue[C]:
-  def load(reader: ConfigReader): Either[ConfigError, C]
+final class ConfigLoader[C](val load: ConfigReader => Either[ConfigError, C])
+    extends ConfigValue[C]
 
 trait ConfigDecoder[C] extends ConfigValue[C]:
   def decode(raw: String): Either[ConfigError, C]
@@ -19,12 +18,6 @@ trait ConfigDecoder[C] extends ConfigValue[C]:
 
 object ConfigDecoder {
   def apply[C](using value: ConfigDecoder[C]): ConfigDecoder[C] = value
-}
-
-private class SimpleConfigLoader[T](
-    read: ConfigReader => Either[ConfigError, T]
-) extends ConfigLoader[T] {
-  override def load(reader: ConfigReader): Either[ConfigError, T] = read(reader)
 }
 
 object ConfigValue:
@@ -39,11 +32,8 @@ object ConfigValue:
   private inline def derivedMirrorProduct[T](
       product: Mirror.ProductOf[T]
   ): ConfigLoader[T] =
-
-    val reader = summonInline[ConfigReader]
-
-    val read: ConfigReader => Either[ConfigError, T] = reader =>
-      traverse(
+    new ConfigLoader[T](reader =>
+      aggregate(
         deriveProduct[
           product.MirroredElemLabels,
           product.MirroredElemTypes
@@ -51,11 +41,8 @@ object ConfigValue:
           fieldMetadata[T],
           reader
         )
-      )
-        .map(v => Tuple.fromArray(v.toArray))
-        .map(product.fromProduct)
-
-    new SimpleConfigLoader[T](read)
+      ).map(v => product.fromProduct(Tuple.fromArray(v.toArray)))
+    )
 
   inline def deriveProduct[
       Labels <: Tuple,
@@ -67,7 +54,7 @@ object ConfigValue:
     inline erasedValue[(Labels, Params)] match
       case _: (EmptyTuple, EmptyTuple) =>
         Nil
-      case _: ((l *: ltail), (p *: ptail)) =>
+      case _: (l *: ltail, p *: ptail) =>
         val label = constValue[l].asInstanceOf[String]
         val fieldMetadata = metadata(label)
 
@@ -125,8 +112,6 @@ object ConfigValue:
       nestedReasons: List[ConfigErrorReason] = Nil
   ): Either[ConfigError, T] =
 
-    val label = constValue[SuperTypeLabel].asInstanceOf[String]
-
     inline erasedValue[Subtypes] match
       case _: EmptyTuple =>
         Left(ConfigError(nestedReasons))
@@ -158,7 +143,7 @@ object ConfigValue:
                 }
             }
           case product: Mirror.ProductOf[`subtype`] =>
-            traverse(
+            val agg = aggregate(
               deriveProduct[
                 product.MirroredElemLabels,
                 product.MirroredElemTypes
@@ -166,10 +151,11 @@ object ConfigValue:
                 fieldMetadata[subtype],
                 reader
               )
+            ).map(v =>
+              product.fromProduct(Tuple.fromArray(v.toArray)).asInstanceOf[T]
             )
-              .map(v =>
-                product.fromProduct(Tuple.fromArray(v.toArray)).asInstanceOf[T]
-              ) match {
+
+            agg match {
               case Right(r) => Right(r)
               case Left(e) if e.onlyContainsMissing =>
                 deriveSum[T, tail, SuperTypeLabel](
@@ -187,13 +173,12 @@ object ConfigValue:
     val typeMeta = typeMetadata[T]
 
     typeMeta.enumCases match
-      case Some(values) => new EnumConfigDecoder(values)
+      case Some(values) => new EnumConfigDecoder(values, typeMeta.name)
       case _ =>
-        val read: ConfigReader => Either[ConfigError, T] = reader =>
+        new ConfigLoader[T](reader =>
           deriveSum[T, sum.MirroredElemTypes, sum.MirroredLabel](
             fieldMetadata[T],
             typeMetadata[T],
             reader
           )
-
-        new SimpleConfigLoader[T](read)
+        )

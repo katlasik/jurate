@@ -11,14 +11,14 @@ given [T: ConfigDecoder] => ConfigDecoder[Option[T]] {
     ConfigDecoder[T].decode(raw).map(Some(_))
 }
 
-given [T: ConfigValue] => ConfigLoader[Option[T]] {
-  override def load(reader: ConfigReader): Either[ConfigError, Option[T]] =
+given [T: ConfigValue] => ConfigLoader[Option[T]] =
+  ConfigLoader[Option[T]](reader =>
     ConfigValue[T] match {
       case loader: ConfigLoader[T] => loader.load(reader).map(Some(_))
       case decoder: ConfigDecoder[T] =>
-        Left(ConfigError.other("You can only load case class!"))
+        Left(ConfigError.other("You can only load case classes!"))
     }
-}
+  )
 
 given ConfigDecoder[String] with {
   override def decode(raw: String): Either[ConfigError, String] = Right(raw)
@@ -29,7 +29,7 @@ given ConfigDecoder[Short] with {
     Right(raw.toShort)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid("Can't decode short value", raw))
+      Left(ConfigError.invalid("can't decode short value", raw))
 }
 
 given ConfigDecoder[Int] with {
@@ -37,7 +37,7 @@ given ConfigDecoder[Int] with {
     Right(raw.toInt)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"was expecting integer", raw))
+      Left(ConfigError.invalid(s"can't decode integer", raw))
 }
 
 given ConfigDecoder[Long] with {
@@ -45,7 +45,7 @@ given ConfigDecoder[Long] with {
     Right(raw.toLong)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"was expecting long", raw))
+      Left(ConfigError.invalid(s"can't decode long", raw))
 }
 
 given ConfigDecoder[Float] with {
@@ -53,7 +53,7 @@ given ConfigDecoder[Float] with {
     Right(raw.toFloat)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"Can't decode double value", raw))
+      Left(ConfigError.invalid(s"can't decode double value", raw))
 }
 
 given ConfigDecoder[Double] with {
@@ -61,7 +61,7 @@ given ConfigDecoder[Double] with {
     Right(raw.toDouble)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"Can't decode double value", raw))
+      Left(ConfigError.invalid(s"can't decode double value", raw))
 }
 
 given ConfigDecoder[BigDecimal] with {
@@ -69,7 +69,7 @@ given ConfigDecoder[BigDecimal] with {
     Right(BigDecimal(raw))
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"Can't decode BigDecimal value", raw))
+      Left(ConfigError.invalid(s"can't decode BigDecimal value", raw))
 }
 
 given ConfigDecoder[BigInt] with {
@@ -77,7 +77,7 @@ given ConfigDecoder[BigInt] with {
     Right(BigInt(raw))
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"Can't decode BigInt value", raw))
+      Left(ConfigError.invalid(s"can't decode BigInt value", raw))
 }
 
 given ConfigDecoder[InetAddress] with {
@@ -87,7 +87,7 @@ given ConfigDecoder[InetAddress] with {
     case e: UnknownHostException =>
       Left(
         ConfigError.invalid(
-          s"Can't decode InetAddress value: ${e.getMessage}",
+          s"can't decode InetAddress value: ${e.getMessage}",
           raw
         )
       )
@@ -99,7 +99,7 @@ given ConfigDecoder[UUID] with {
   catch
     case e: IllegalArgumentException =>
       Left(
-        ConfigError.invalid(s"Can't decode UUID value: ${e.getMessage}", raw)
+        ConfigError.invalid(s"can't decode UUID value: ${e.getMessage}", raw)
       )
 }
 
@@ -109,7 +109,7 @@ given ConfigDecoder[Path] with {
   catch
     case e: InvalidPathException =>
       Left(
-        ConfigError.invalid(s"Can't decode Path value: ${e.getMessage}", raw)
+        ConfigError.invalid(s"can't decode Path value: ${e.getMessage}", raw)
       )
 }
 
@@ -124,7 +124,7 @@ given ConfigDecoder[Boolean] with {
     raw.toLowerCase match
       case "true" | "yes" | "1" => Right(true)
       case "false" | "no" | "0" => Right(false)
-      case _ => Left(ConfigError.invalid(s"Can't decode boolean value", raw))
+      case _ => Left(ConfigError.invalid(s"can't decode boolean value", raw))
 }
 
 given ConfigDecoder[URI] with {
@@ -133,7 +133,7 @@ given ConfigDecoder[URI] with {
     catch
       case e: IllegalArgumentException =>
         Left(
-          ConfigError.invalid(s"Can't decode URI value: ${e.getMessage}", raw)
+          ConfigError.invalid(s"can't decode URI value: ${e.getMessage}", raw)
         )
 }
 

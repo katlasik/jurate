@@ -102,7 +102,7 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
     val config = load[Config]
 
     //then
-    config.left.value should be(ConfigError.invalid("was expecting integer", "Bad"))
+    config.left.value should be(ConfigError.invalid("can't decode integer", "Bad"))
   }
 
   it should "use default value of case class in case any value is missing" in {
