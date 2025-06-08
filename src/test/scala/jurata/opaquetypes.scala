@@ -20,16 +20,17 @@ class OpaqueTypesSpec extends AnyFlatSpec with Matchers with EitherValues {
 
   it should "load opaque types class" in {
 
-    //given
+    // given
     given ConfigReader = ConfigReader.mocked
       .onProp("config.name", "jurata")
 
-    case class Config(@jurata.prop("config.name") name: Name) derives ConfigValue
+    case class Config(@jurata.prop("config.name") name: Name)
+        derives ConfigValue
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
+    // then
     config.value should be(Config(Name("jurata")))
 
   }

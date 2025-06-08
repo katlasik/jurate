@@ -16,7 +16,7 @@ case class Config(
   dbConfig: DbConfig
 ) derives ConfigValue
 
-load[Config] //Right(Config(localhost,8080,None,true, DbConfig(*****, user)))
+load[Config] //Right(Config(localhost, 8080, None, true, DbConfig(*****, user)))
 ```
 
 ## Usage

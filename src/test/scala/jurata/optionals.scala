@@ -8,32 +8,32 @@ class OptionalsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
   it should "load optional value" in {
 
-    //given
-    case class Config(@env("PORT") port: Option[Int])derives ConfigValue
+    // given
+    case class Config(@env("PORT") port: Option[Int]) derives ConfigValue
 
     given ConfigReader = ConfigReader.mocked
       .onEnv("PORT", "2000")
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
+    // then
     config.value should be(Config(Some(2000)))
   }
 
   it should "not fail if optional value is missing" in {
 
-    //given
-    case class Config(@env("PORT") port: Option[Int])derives ConfigValue
+    // given
+    case class Config(@env("PORT") port: Option[Int]) derives ConfigValue
 
     given ConfigReader = ConfigReader.mocked
       .onEnv("PORT2", "200")
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
+    // then
     config.value should be(Config(None))
   }
-  
+
 }

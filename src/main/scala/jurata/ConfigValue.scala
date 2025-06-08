@@ -3,6 +3,7 @@ package jurata
 import jurata.utils.*
 import jurata.utils.Macros.*
 
+import scala.annotation.implicitNotFound
 import scala.deriving.Mirror
 import scala.compiletime.*
 
@@ -62,7 +63,7 @@ object ConfigValue:
           case decoder: ConfigDecoder[p] =>
             if fieldMetadata.annotations.isEmpty then
               Left(
-                ConfigError.other(s"No annotations found for field: ${label}")
+                ConfigError.other(s"No annotations found for field: $label")
               )
             else
               reader.read(fieldMetadata.annotations) match {

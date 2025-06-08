@@ -14,27 +14,27 @@ enum User derives ConfigValue:
   case Regular(@env("USER_EMAIL") email: String)
   case Admin(@env("ADMIN_NAME") name: String)
 
-
 class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
   it should "decode simple enum declared in object" in {
     given ConfigReader = ConfigReader.mocked
       .onEnv("SEV", "Error")
 
-    case class Config(@env("SEV") bugSeverity: Severity)derives ConfigValue
+    case class Config(@env("SEV") bugSeverity: Severity) derives ConfigValue
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
+    // then
     config.value should be(Config(Severity.Error))
 
-    case class ConfigWithNested(@env("SEV") bugSeverity: NestedSeverity)derives ConfigValue
+    case class ConfigWithNested(@env("SEV") bugSeverity: NestedSeverity)
+        derives ConfigValue
 
-    //when
+    // when
     val configWithNested = load[ConfigWithNested]
 
-    //then
+    // then
     configWithNested.value should be(ConfigWithNested(NestedSeverity.Error))
   }
 
@@ -44,10 +44,10 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     case class Config(@prop("protocol") protocol: Protocol) derives ConfigValue
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
+    // then
     config.value should be(Config(Protocol.HTTPS))
   }
 
@@ -57,10 +57,10 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     case class Config(@prop("protocol") protocol: Protocol) derives ConfigValue
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
+    // then
     config.value should be(Config(Protocol.HTTP))
   }
 
@@ -71,11 +71,16 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     case class Config(@env("SEV") bugSeverity: Severity) derives ConfigValue
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
-    config.left.value should be(ConfigError.invalid("couldn't find case for enum Severity (available values: Error, Warning)", "Bad"))
+    // then
+    config.left.value should be(
+      ConfigError.invalid(
+        "couldn't find case for enum Severity (available values: Error, Warning)",
+        "Bad"
+      )
+    )
   }
 
   it should "decode enum with fields" in {
@@ -85,10 +90,10 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     case class Config(@env("ENV") user: User) derives ConfigValue
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
+    // then
     config.value should be(Config(User.Admin("Jack")))
   }
 
@@ -96,16 +101,17 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     given ConfigReader = ConfigReader.mocked
 
-    case class Config(@env("ENV") user: User = User.Regular("test@acme.com")) derives ConfigValue
+    case class Config(@env("ENV") user: User = User.Regular("test@acme.com"))
+        derives ConfigValue
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
+    // then
     config.value should be(Config(User.Regular("test@acme.com")))
   }
 
-    it should "load first availble enum case" in {
+  it should "load first availble enum case" in {
 
     given ConfigReader = ConfigReader.mocked
       .onEnv("ADMIN_NAME", "Jack")
@@ -113,10 +119,10 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     case class Config(@env("ENV") user: User) derives ConfigValue
 
-    //when
+    // when
     val config = load[Config]
 
-    //then
+    // then
     config.value should be(Config(User.Regular("jack@acme.com")))
   }
 
