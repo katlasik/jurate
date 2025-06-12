@@ -12,7 +12,6 @@ class CollectionsSpec extends AnyFlatSpec with Matchers with EitherValues {
   it should "load collection of enums" in {
 
     case class FruitConfig(@env("FRUITS") fruits: List[Fruit])
-        derives ConfigLoader
 
     given ConfigReader = ConfigReader.mocked
       .onEnv("FRUITS", "Apple, Banana, Pear")
@@ -29,7 +28,6 @@ class CollectionsSpec extends AnyFlatSpec with Matchers with EitherValues {
   it should "load collection of ints" in {
 
     case class Numbers(@env("NUMBERS") numbers: Vector[Int])
-        derives ConfigLoader
 
     given ConfigReader = ConfigReader.mocked
       .onEnv("NUMBERS", "1, 10, 100")
@@ -43,7 +41,7 @@ class CollectionsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
   it should "load collection of booleans" in {
 
-    case class Bools(@env("BOOLS") bools: Seq[Boolean]) derives ConfigLoader
+    case class Bools(@env("BOOLS") bools: Seq[Boolean])
 
     given ConfigReader = ConfigReader.mocked
       .onEnv("BOOLS", "1,0,1")

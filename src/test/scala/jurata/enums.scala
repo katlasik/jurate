@@ -31,7 +31,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
       .onEnv("SEV", "Warning")
 
-    case class Config(@env("SEV") bugSeverity: Severity) derives ConfigLoader
+    case class Config(@env("SEV") bugSeverity: Severity)
 
     // when
     val config = load[Config]
@@ -40,7 +40,6 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     config.value should be(Config(Severity.Warning))
 
     case class ConfigWithNested(@env("SEV") bugSeverity: NestedSeverity)
-        derives ConfigLoader
 
     // when
     val configWithNested = load[ConfigWithNested]
@@ -53,7 +52,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
       .onProp("protocol", "HTTPS")
 
-    case class Config(@prop("protocol") protocol: Protocol) derives ConfigLoader
+    case class Config(@prop("protocol") protocol: Protocol)
 
     // when
     val config = load[Config]
@@ -75,7 +74,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
             ConfigError.invalid(s"Couldn't find right value for Protocol", raw)
           )
 
-    case class Config(@prop("protocol") protocol: Protocol) derives ConfigLoader
+    case class Config(@prop("protocol") protocol: Protocol)
 
     // when
     val config = load[Config]
@@ -89,7 +88,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
       .onEnv("SEV", "Bad")
 
-    case class Config(@env("SEV") bugSeverity: Severity) derives ConfigLoader
+    case class Config(@env("SEV") bugSeverity: Severity)
 
     // when
     val config = load[Config]
@@ -108,7 +107,6 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
 
     case class Config(@env("SEV") bugSeverity: Severity = Severity.Error)
-        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -122,7 +120,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
       .onEnv("ADMIN_NAME", "Jack")
 
-    case class Config(@env("ENV") user: User) derives ConfigLoader
+    case class Config(@env("ENV") user: User)
 
     // when
     val config = load[Config]
@@ -136,7 +134,6 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
 
     case class Config(@env("ENV") user: User = User.Regular("test@acme.com"))
-        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -151,7 +148,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onEnv("ADMIN_NAME", "Jack")
       .onEnv("USER_EMAIL", "jack@acme.com")
 
-    case class Config(@env("ENV") user: User) derives ConfigLoader
+    case class Config(@env("ENV") user: User)
 
     // when
     val config = load[Config]
@@ -169,7 +166,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     given ConfigReader = ConfigReader.mocked
 
-    case class Config(job: MedicalJob) derives ConfigLoader
+    case class Config(job: MedicalJob)
 
     // when
     val config = load[Config]

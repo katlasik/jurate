@@ -94,8 +94,6 @@ object ConfigLoader:
       Subtypes <: Tuple,
       SuperTypeLabel <: String
   ](
-      meta: Map[String, FieldMetadata],
-      typeMeta: TypeMetadata[T],
       reader: ConfigReader,
       nestedReasons: List[ConfigErrorReason] = Nil
   ): Either[ConfigError, T] =
@@ -111,8 +109,6 @@ object ConfigLoader:
               nestedSum.MirroredElemTypes,
               nestedSum.MirroredLabel
             ](
-              meta,
-              typeMetadata[`subtype`],
               reader
             ).map(_.asInstanceOf[T])
           case loader: ConfigLoader[`subtype`] =>
@@ -120,8 +116,6 @@ object ConfigLoader:
               case Right(r) => Right(r)
               case Left(e) if e.onlyContainsMissing =>
                 deriveSum[T, tail, SuperTypeLabel](
-                  meta,
-                  typeMeta,
                   reader,
                   nestedReasons ++ e.reasons
                 )
@@ -144,8 +138,6 @@ object ConfigLoader:
               case Right(r) => Right(r)
               case Left(e) if e.onlyContainsMissing =>
                 deriveSum[T, tail, SuperTypeLabel](
-                  meta,
-                  typeMeta,
                   reader,
                   nestedReasons ++ e.reasons
                 )
@@ -161,9 +153,5 @@ object ConfigLoader:
       error("You need to derive EnumConfigDecoder for singleton enums")
     else
       new ConfigLoader[T](reader =>
-        deriveSum[T, sum.MirroredElemTypes, sum.MirroredLabel](
-          fieldMetadata[T],
-          typeMetadata[T],
-          reader
-        )
+        deriveSum[T, sum.MirroredElemTypes, sum.MirroredLabel](reader)
       )

@@ -11,7 +11,7 @@ class FallbacksSpec extends AnyFlatSpec with Matchers with EitherValues {
     // given
     case class Config(
         @prop("port") @env("PORT") @env("FALLBACK_PORT") port: Int
-    ) derives ConfigLoader
+    )
 
     // when
     val configWithEnv = load[Config](using
@@ -39,7 +39,6 @@ class FallbacksSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // given
     case class Config(@env("PORT") @env("FALLBACK_PORT") port: Int)
-        derives ConfigLoader
 
     given ConfigReader = ConfigReader.mocked
       .onEnv("FALLBACK_PORT", "1001")

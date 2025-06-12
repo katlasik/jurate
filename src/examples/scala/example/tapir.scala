@@ -10,7 +10,7 @@ import scala.io.StdIn.readLine
 case class HttpConfig(
   @env("HTTP_HOST") host: String = "localhost",
   @env("HTTP_PORT") port: Int = 8080
-) derives ConfigLoader
+)
 
 @main def helloWorldTapir(): Unit = supervised:
 

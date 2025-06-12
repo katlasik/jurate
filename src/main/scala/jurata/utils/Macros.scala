@@ -83,7 +83,6 @@ private[jurata] object Macros {
     val typeName = TypeRepr.of[T].typeSymbol.name
 
     report.errorAndAbort(s"Couldn't find decoder for type $typeName")
-
   }
 
   inline def fieldMetadata[A] = ${
@@ -148,41 +147,6 @@ private[jurata] object Macros {
 
     '{
       Map.from($values)
-    }
-
-  inline def typeMetadata[A] = ${
-    typeMetadataImpl[A]
-  }
-
-  private def typeMetadataImpl[A: Type](using
-      quotes: Quotes
-  ): Expr[TypeMetadata[A]] =
-    import quotes.reflect.*
-
-    val typeSymbol = TypeRepr.of[A].typeSymbol
-
-    val annotations = Expr.ofList(
-      typeSymbol.annotations
-        .filter(filterAnnotation)
-        .map(_.asExpr.asExprOf[jurata.ConfigAnnotation])
-        .reverse
-    )
-
-    val companion = Ref(typeSymbol.companionModule)
-
-    val valuesMethod =
-      typeSymbol.companionModule.methodMember("values").headOption
-
-    val enumCases: Expr[Option[Array[A]]] = toExprOpt(
-      valuesMethod.map { m =>
-        Select.unique(companion, m.name).asExprOf[Array[A]]
-      }
-    )
-
-    val name = Expr(typeSymbol.name)
-
-    '{
-      TypeMetadata[A]($enumCases, $annotations, $name)
     }
 
   inline def typeName[A] = ${

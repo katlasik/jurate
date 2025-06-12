@@ -14,7 +14,6 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onEnv("HOST", "localhost")
 
     case class Config(@env("PORT") port: Int, @env("HOST") host: String)
-        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -31,7 +30,6 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onEnv("HOST", "localhost")
 
     case class Config(@env("PORT") port: Int = 7777, @env("HOST") host: String)
-        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -47,7 +45,6 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onEnv("HOST", "localhost")
 
     case class Config(@env("PORT") port: Int = 7777, @env("HOST") host: String)
-        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -62,7 +59,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
       .onEnv("PORT", "bad")
 
-    case class Config(@env("PORT") port: Int) derives ConfigLoader
+    case class Config(@env("PORT") port: Int)
 
     // when
     val config = load[Config]
@@ -86,7 +83,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     // given
     given ConfigReader = ConfigReader.mocked
 
-    case class Config(@env("PORT") port: Int) derives ConfigLoader
+    case class Config(@env("PORT") port: Int)
 
     // when
     val config = load[Config]
@@ -102,7 +99,6 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onProp("password", "qwerty")
 
     case class Config(@prop("password") password: Secret[String])
-        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -118,7 +114,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     // when
     given ConfigReader = ConfigReader.mocked
 
-    case class Config(port: Int) derives ConfigLoader
+    case class Config(port: Int)
 
     // then
     val config = load[Config]
@@ -140,7 +136,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
         @env("HOST") @prop("sys.host")
         host: String,
         @env("SECRET") secret: Secret[String]
-    ) derives ConfigLoader
+    )
 
     // when
     val config = load[Config]

@@ -6,13 +6,13 @@ case class DbConfig(
   @env("DB_PORT") @prop("db.port") port: Int,
   @env("DB_USER") @prop("db.user") user: String,
   @env("DB_PASSWORD") @prop("db.password") password: Secret[String]
-) derives ConfigLoader
+)
 
 case class Config(
   @env("PORT") @prop("http.port") port: Int,
   @env("HOST") @prop("http.host") host: String,
   dbConfig: DbConfig
-) derives ConfigLoader
+)
 
 @main
 def app(): Unit =

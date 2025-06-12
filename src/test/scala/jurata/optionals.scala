@@ -24,10 +24,10 @@ class OptionalsSpec extends AnyFlatSpec with Matchers with EitherValues {
   it should "not fail if optional value is missing" in {
 
     // given
-    case class Config(@env("PORT") port: Option[Int]) derives ConfigLoader
+    case class Config(@env("PORT") port: Option[Int])
 
     given ConfigReader = ConfigReader.mocked
-      .onEnv("PORT2", "200")
+      .onEnv("NOT_PORT", "200")
 
     // when
     val config = load[Config]

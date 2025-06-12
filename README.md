@@ -8,7 +8,7 @@ import jurata.{*, given}
 case class DbConfig(
   @env("DB_PASSWORD") password: Secret[String],
   @env("DB_USERNAME") username: String
-) derives ConfigLoader
+)
 
 case class Config(
   @env("HOST") host: String,
@@ -16,7 +16,7 @@ case class Config(
   @env("ADMIN_EMAIL") adminEmail: Option[String],          
   @prop("app.debug") debug: Boolean,
   dbConfig: DbConfig
-) derives ConfigLoader
+)
 
 load[Config] //Right(Config(localhost, 8080, None, true, DbConfig(*****, user)))
 ```
@@ -38,7 +38,7 @@ You can also provide a default value for a field, which will be used if the valu
 ```scala
 case class Config(
    @prop("debug.email") @env("EMAIL") @env("ADMIN_EMAIL") email: String = "foo@bar.com"
-) derives ConfigLoader
+)
 ```
 
 In this example library will first check if system property `debug.email` exists, then it will look for environment variables EMAIL and ADMIN_EMAIL. If none are found default value `foo@bar.com` will be used.
@@ -49,7 +49,7 @@ You can make field optional by using `Option` type. If the value is not found, t
 ```scala
 case class Config(
   @env("ADMIN_EMAIL") adminEmail: Option[String],
-) derives ConfigLoader
+)
 ```
 
 ## Nested case classes
@@ -65,7 +65,7 @@ case class Config(
   @env("HOST") host: String,
   @env("PORT") port: Int = 8080,
   dbConfig: DbConfig
-) derives ConfigLoader
+)
 ```
 
 ## Enums
@@ -95,20 +95,20 @@ given ConfigDecoder[Environment] = new ConfigDecoder[Environment]:
 The result of loading sealed trait will be first subclass to load successfully.
 
 ```scala
-sealed trait MessagingConfig derives ConfigLoader
+sealed trait MessagingConfig
 case class LiveConfig(@env("BROKER_ADDRESS") brokerAddress: String) extends MessagingConfig
 case class TestConfig(@prop("BROKER_NAME" ) brokerName: String) extends MessagingConfig
 
-case class Config(messaging: MessagingConfig) derives ConfigLoader
+case class Config(messaging: MessagingConfig)
 ```
 
 The same works for enums with fields
 ```scala
-enum MessagingConfig derives ConfigLoader: 
+enum MessagingConfig: 
   case LiveConfig(@env("BROKER_ADDRESS") brokerAddress: String)
   case TestConfig(@prop("BROKER_NAME" ) brokerName: String)
 
-case class Config(messaging: MessagingConfig) derives ConfigLoader
+case class Config(messaging: MessagingConfig)
 ```
 
 ## Secret values
@@ -118,13 +118,12 @@ If don't want to expose your secret values in logs or error messages, you can us
 case class DbConfig(
   @env("DB_PASSWORD") password: Secret[String],
   @env("DB_USERNAME") username: String
-) derives ConfigLoader
+)
 
 
 val config = load[DbConfig]
 
 println(config) // Right(DbConfig(*****, user))
-
 ```
 
 # Adding custom decoders
