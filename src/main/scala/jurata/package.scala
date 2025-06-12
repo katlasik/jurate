@@ -14,30 +14,24 @@ given [T: ConfigDecoder] => ConfigDecoder[Option[T]] {
     ConfigDecoder[T].decode(raw).map(Some(_))
 }
 
-given [T: ConfigValue] => ConfigLoader[Option[T]] =
-  ConfigLoader[Option[T]](reader =>
-    ConfigValue[T] match {
-      case loader: ConfigLoader[T] => loader.load(reader).map(Some(_))
-      case decoder: ConfigDecoder[T] =>
-        Left(ConfigError.other("You can only load case classes!"))
-    }
+given [T: ConfigLoader] => ConfigLoader[Option[T]] =
+  new ConfigLoader[Option[T]](reader =>
+    ConfigLoader[T].load(reader).map(Some(_))
   )
 
-given [T: ConfigValue, C[T] <: Seq[T]](
-  using 
-  cv: ConfigValue[T],
-  factory: Factory[T, C[T]],
-  eitherFactory: Factory[Either[ConfigError, T], C[Either[ConfigError, T]]]
+given [T, C[T] <: Seq[T]](using
+    decoder: ConfigDecoder[T],
+    factory: Factory[T, C[T]],
+    eitherFactory: Factory[Either[ConfigError, T], C[Either[ConfigError, T]]]
 ): ConfigDecoder[C[T]] =
   raw =>
-
-    cv match {
-      case decoder: ConfigDecoder[T] =>
-        val values: C[Either[ConfigError, T]] = raw.split(",").map(_.trim).map(decoder.decode).to(
-          eitherFactory
-        )
-        aggregate(values)
-    }
+    aggregate(
+      raw
+        .split(",")
+        .map(_.trim)
+        .map(decoder.decode)
+        .to(eitherFactory)
+    )
 
 given ConfigDecoder[String] with {
   override def decode(raw: String): Either[ConfigError, String] = Right(raw)
@@ -156,17 +150,11 @@ given ConfigDecoder[URI] with {
         )
 }
 
-
-
 def load[C](using
     @implicitNotFound(
       "Can't find required givens. Did you forget to use derives for your case classes?"
-    ) cv: ConfigValue[C],
+    ) loader: ConfigLoader[C],
     reader: ConfigReader
-): Either[ConfigError, C] = cv match {
-  case loader: ConfigLoader[C] => loader.load(reader)
-  case decoder: ConfigDecoder[C] =>
-    Left(ConfigError.other("You can only load case class!"))
-}
+): Either[ConfigError, C] = loader.load(reader)
 
 given ConfigReader = LiveConfigReader

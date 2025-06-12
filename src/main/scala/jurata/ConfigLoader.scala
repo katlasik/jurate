@@ -6,25 +6,13 @@ import jurata.utils.Macros.*
 import scala.deriving.Mirror
 import scala.compiletime.*
 
-trait ConfigValue[C]
-
 final class ConfigLoader[C](val load: ConfigReader => Either[ConfigError, C])
-    extends ConfigValue[C]
 
-trait ConfigDecoder[C] extends ConfigValue[C]:
-  def decode(raw: String): Either[ConfigError, C]
+object ConfigLoader:
 
-  def contramap[B](f: C => B): ConfigDecoder[B] = decode(_).map(f)
+  def apply[C](using value: ConfigLoader[C]): ConfigLoader[C] = value
 
-object ConfigDecoder {
-  def apply[C](using value: ConfigDecoder[C]): ConfigDecoder[C] = value
-}
-
-object ConfigValue:
-
-  def apply[C](using value: ConfigValue[C]): ConfigValue[C] = value
-
-  inline given derived[A](using mirror: Mirror.Of[A]): ConfigValue[A] =
+  inline given derived[A](using mirror: Mirror.Of[A]): ConfigLoader[A] =
     inline mirror match
       case sum: Mirror.SumOf[A] => derivedMirrorSum[A](sum)
       case product: Mirror.ProductOf[A] => derivedMirrorProduct[A](product)
@@ -58,8 +46,8 @@ object ConfigValue:
         val label = constValue[l].asInstanceOf[String]
         val fieldMetadata = metadata(label)
 
-        val value = summonInline[ConfigValue[p]] match {
-          case decoder: ConfigDecoder[p] =>
+        val value = summonFrom {
+          case decoder: ConfigDecoder[`p`] =>
             if fieldMetadata.annotations.isEmpty then
               Left(
                 ConfigError.other(s"No annotations found for field: $label")
@@ -80,8 +68,7 @@ object ConfigValue:
                   }
                 case Left(e) => Left(e)
               }
-
-          case loader: ConfigLoader[p] =>
+          case loader: ConfigLoader[`p`] =>
             loader.load(reader) match {
               case Right(v) => Right(v)
               case Left(e) if e.onlyContainsMissing =>
@@ -97,6 +84,7 @@ object ConfigValue:
                 }
               case Left(e) => Left(e)
             }
+          case _ => decoderError[p]
         }
 
         value :: deriveProduct[ltail, ptail](metadata, reader)
@@ -127,20 +115,17 @@ object ConfigValue:
               typeMetadata[`subtype`],
               reader
             ).map(_.asInstanceOf[T])
-          case configValue: ConfigValue[`subtype`] =>
-            configValue match {
-              case loader: ConfigLoader[`subtype`] =>
-                loader.load(reader).map(_.asInstanceOf[T]) match {
-                  case Right(r) => Right(r)
-                  case Left(e) if e.onlyContainsMissing =>
-                    deriveSum[T, tail, SuperTypeLabel](
-                      meta,
-                      typeMeta,
-                      reader,
-                      nestedReasons ++ e.reasons
-                    )
-                  case Left(value) => Left(value)
-                }
+          case loader: ConfigLoader[`subtype`] =>
+            loader.load(reader).map(_.asInstanceOf[T]) match {
+              case Right(r) => Right(r)
+              case Left(e) if e.onlyContainsMissing =>
+                deriveSum[T, tail, SuperTypeLabel](
+                  meta,
+                  typeMeta,
+                  reader,
+                  nestedReasons ++ e.reasons
+                )
+              case Left(value) => Left(value)
             }
           case product: Mirror.ProductOf[`subtype`] =>
             val agg = aggregate(
@@ -169,16 +154,16 @@ object ConfigValue:
 
         }
 
-  private inline def derivedMirrorSum[T](sum: Mirror.SumOf[T]): ConfigValue[T] =
-    val typeMeta = typeMetadata[T]
-
-    typeMeta.enumCases match
-      case Some(values) => new EnumConfigDecoder(values, typeMeta.name)
-      case _ =>
-        new ConfigLoader[T](reader =>
-          deriveSum[T, sum.MirroredElemTypes, sum.MirroredLabel](
-            fieldMetadata[T],
-            typeMetadata[T],
-            reader
-          )
+  private inline def derivedMirrorSum[T](
+      sum: Mirror.SumOf[T]
+  ): ConfigLoader[T] =
+    inline if isSingletonEnum[T] then
+      error("You need to derive EnumConfigDecoder for singleton enums")
+    else
+      new ConfigLoader[T](reader =>
+        deriveSum[T, sum.MirroredElemTypes, sum.MirroredLabel](
+          fieldMetadata[T],
+          typeMetadata[T],
+          reader
         )
+      )
