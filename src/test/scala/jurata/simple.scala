@@ -14,7 +14,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onEnv("HOST", "localhost")
 
     case class Config(@env("PORT") port: Int, @env("HOST") host: String)
-        derives ConfigValue
+        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -31,7 +31,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onEnv("HOST", "localhost")
 
     case class Config(@env("PORT") port: Int = 7777, @env("HOST") host: String)
-        derives ConfigValue
+        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -47,7 +47,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onEnv("HOST", "localhost")
 
     case class Config(@env("PORT") port: Int = 7777, @env("HOST") host: String)
-        derives ConfigValue
+        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -62,7 +62,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
       .onEnv("PORT", "bad")
 
-    case class Config(@env("PORT") port: Int) derives ConfigValue
+    case class Config(@env("PORT") port: Int) derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -74,11 +74,11 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
   }
 
   it should "fail to compile if decoder is missing" in {
-    //given
-    class Foo
 
-    //then
-    """case class Config(@env("PORT") port: Foo) derives ConfigValue""" shouldNot compile
+    """
+      class Foo
+      case class Config(@env("PORT") port: Foo) derives ConfigLoader
+    """ shouldNot compile
   }
 
   it should "fail to load if value is missing" in {
@@ -86,7 +86,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     // given
     given ConfigReader = ConfigReader.mocked
 
-    case class Config(@env("PORT") port: Int) derives ConfigValue
+    case class Config(@env("PORT") port: Int) derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -102,7 +102,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onProp("password", "qwerty")
 
     case class Config(@prop("password") password: Secret[String])
-        derives ConfigValue
+        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -118,7 +118,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     // when
     given ConfigReader = ConfigReader.mocked
 
-    case class Config(port: Int) derives ConfigValue
+    case class Config(port: Int) derives ConfigLoader
 
     // then
     val config = load[Config]
@@ -140,7 +140,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
         @env("HOST") @prop("sys.host")
         host: String,
         @env("SECRET") secret: Secret[String]
-    ) derives ConfigValue
+    ) derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -152,4 +152,5 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
       "Missing environment variable SECRET"
     )
   }
+
 }

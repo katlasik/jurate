@@ -25,7 +25,7 @@ class OpaqueTypesSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onProp("config.name", "jurata")
 
     case class Config(@jurata.prop("config.name") name: Name)
-        derives ConfigValue
+        derives ConfigLoader
 
     // when
     val config = load[Config]

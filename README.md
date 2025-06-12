@@ -1,12 +1,14 @@
 # Intro
-Jurata is a simple library for instantiating case class instances from environment variables and system properties. You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then use the `derives` keyword to derive the typeclass `ConfigValue` for your case class.
+Jurata is a simple library for instantiating case class instances from environment variables and system properties. You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then use the `derives` keyword to derive the typeclass `ConfigLoader` for your case class.
 Finally, you can load your config using `load` method.
 
 ```scala
-case class DbConfig (
+import jurata.{*, given}
+
+case class DbConfig(
   @env("DB_PASSWORD") password: Secret[String],
   @env("DB_USERNAME") username: String
-) derives ConfigValue
+) derives ConfigLoader
 
 case class Config(
   @env("HOST") host: String,
@@ -14,10 +16,18 @@ case class Config(
   @env("ADMIN_EMAIL") adminEmail: Option[String],          
   @prop("app.debug") debug: Boolean,
   dbConfig: DbConfig
-) derives ConfigValue
+) derives ConfigLoader
 
 load[Config] //Right(Config(localhost, 8080, None, true, DbConfig(*****, user)))
 ```
+
+You have to import givens using:
+
+```scala
+import jurata.{*, given}
+```
+
+This provides instance of `ConfigReader` which is required to load values from environment or system properties.
 
 ## Usage
 
@@ -28,7 +38,7 @@ You can also provide a default value for a field, which will be used if the valu
 ```scala
 case class Config(
    @prop("debug.email") @env("EMAIL") @env("ADMIN_EMAIL") email: String = "foo@bar.com"
-) derives ConfigValue
+) derives ConfigLoader
 ```
 
 In this example library will first check if system property `debug.email` exists, then it will look for environment variables EMAIL and ADMIN_EMAIL. If none are found default value `foo@bar.com` will be used.
@@ -39,66 +49,76 @@ You can make field optional by using `Option` type. If the value is not found, t
 ```scala
 case class Config(
   @env("ADMIN_EMAIL") adminEmail: Option[String],
-) derives ConfigValue
+) derives ConfigLoader
 ```
 
 ## Nested case classes
-You can use nested case classes to organize your config. Every nested case class has to derive typeclass `ConfigValue`.
+You can use nested case classes to organize your config.
 
 ```scala
-case class DbConfig (
+case class DbConfig(
   @env("DB_PASSWORD") password: Secret[String],
   @env("DB_USERNAME") username: String
-) derives ConfigValue 
+) 
 
-case class Config (
+case class Config(
   @env("HOST") host: String,
   @env("PORT") port: Int = 8080,
   dbConfig: DbConfig
-) derives ConfigValue
+) derives ConfigLoader
 ```
 
 ## Enums
-You can load values of enums using `@env` or `@prop` annotations. The library will automatically convert the string value to the enum value. Searching for the right enum case is case-insensitive.
+You can load values of singleton enums (with no fields) using `@env` or `@prop` annotations. First, you need ot derive the `DecoderConfig` typeclass by adding `derives EnumConfigDecoder` to the enum defition. The library will automatically convert the loaded value to the enum case. Searching for the right enum case is case-sensitive.
 
 ```scala
-enum Environment {
+enum Environment derives EnumConfigDecoder:
   case DEV, PROD, STAGING
-}
 
 case class Config(
   @env("ENV") env: Environment
-) derives ConfigValue
+)
+```
+
+If you want to customize how enum is loaded you can provide your own instance of `ConfigDecoder`:
+
+```scala
+given ConfigDecoder[Environment] = new ConfigDecoder[Environment]:
+  def decode(raw: String): Either[ConfigError, Environment] = 
+    val rawLowercased = raw.trim().toLowerCase()
+    Environment.values
+      .find(_.toString().toLowerCase() == rawLowercased)
+      .toRight(Environment.invalid(s"Couldn't find right value for Protocol", raw))
 ```
 
 ## Subclasses
 The result of loading sealed trait will be first subclass to load successfully.
 
 ```scala
-sealed trait MessagingConfig derives ConfigValue
+sealed trait MessagingConfig derives ConfigLoader
 case class LiveConfig(@env("BROKER_ADDRESS") brokerAddress: String) extends MessagingConfig
 case class TestConfig(@prop("BROKER_NAME" ) brokerName: String) extends MessagingConfig
 
-case class Config(messaging: MessagingConfig) derives ConfigValue
+case class Config(messaging: MessagingConfig) derives ConfigLoader
 ```
 
 The same works for enums with fields
 ```scala
-enum MessagingConfig derives ConfigValue: 
+enum MessagingConfig derives ConfigLoader: 
   case LiveConfig(@env("BROKER_ADDRESS") brokerAddress: String)
   case TestConfig(@prop("BROKER_NAME" ) brokerName: String)
 
-case class Config(messaging: MessagingConfig) derives ConfigValue
+case class Config(messaging: MessagingConfig) derives ConfigLoader
 ```
 
 ## Secret values
 If don't want to expose your secret values in logs or error messages, you can use `Secret` type. It will hide the value when printed.
 
 ```scala
-case class DbConfig (
+case class DbConfig(
   @env("DB_PASSWORD") password: Secret[String],
   @env("DB_USERNAME") username: String
-) derives ConfigValue
+) derives ConfigLoader
 
 
 val config = load[DbConfig]

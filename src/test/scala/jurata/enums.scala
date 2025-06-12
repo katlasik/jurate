@@ -1,48 +1,59 @@
 package jurata
 
-import jurata.EnumsSpec.Nested.NestedSeverity
-import jurata.EnumsSpec.Severity
+import jurata.Nested.NestedSeverity
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-enum Protocol derives ConfigValue:
+enum Protocol derives EnumConfigDecoder:
   case HTTP
   case HTTPS
 
-enum User derives ConfigValue:
+enum User:
+  case Unverified(@env("ANON") anonymous: Boolean)
   case Regular(@env("USER_EMAIL") email: String)
   case Admin(@env("ADMIN_NAME") name: String)
+  case Banned(@prop("REASON") reason: String)
+
+enum Severity derives EnumConfigDecoder:
+  case Error
+  case Warning
+
+object Nested {
+  enum NestedSeverity derives EnumConfigDecoder:
+    case Error
+    case Warning
+}
 
 class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
 
   it should "decode simple enum declared in object" in {
     given ConfigReader = ConfigReader.mocked
-      .onEnv("SEV", "Error")
+      .onEnv("SEV", "Warning")
 
-    case class Config(@env("SEV") bugSeverity: Severity) derives ConfigValue
+    case class Config(@env("SEV") bugSeverity: Severity) derives ConfigLoader
 
     // when
     val config = load[Config]
 
     // then
-    config.value should be(Config(Severity.Error))
+    config.value should be(Config(Severity.Warning))
 
     case class ConfigWithNested(@env("SEV") bugSeverity: NestedSeverity)
-        derives ConfigValue
+        derives ConfigLoader
 
     // when
     val configWithNested = load[ConfigWithNested]
 
     // then
-    configWithNested.value should be(ConfigWithNested(NestedSeverity.Error))
+    configWithNested.value should be(ConfigWithNested(NestedSeverity.Warning))
   }
 
   it should "decode simple enum" in {
     given ConfigReader = ConfigReader.mocked
       .onProp("protocol", "HTTPS")
 
-    case class Config(@prop("protocol") protocol: Protocol) derives ConfigValue
+    case class Config(@prop("protocol") protocol: Protocol) derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -51,17 +62,26 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     config.value should be(Config(Protocol.HTTPS))
   }
 
-  it should "decode simple enum regardless of case" in {
+  it should "decode simple with custom decoder" in {
     given ConfigReader = ConfigReader.mocked
-      .onProp("protocol", "hTtP")
+      .onProp("protocol", "hTtPs")
 
-    case class Config(@prop("protocol") protocol: Protocol) derives ConfigValue
+    given ConfigDecoder[Protocol] = new ConfigDecoder[Protocol]:
+      def decode(raw: String): Either[ConfigError, Protocol] =
+        val rawLowercased = raw.trim().toLowerCase()
+        Protocol.values
+          .find(_.toString().toLowerCase() == rawLowercased)
+          .toRight(
+            ConfigError.invalid(s"Couldn't find right value for Protocol", raw)
+          )
+
+    case class Config(@prop("protocol") protocol: Protocol) derives ConfigLoader
 
     // when
     val config = load[Config]
 
     // then
-    config.value should be(Config(Protocol.HTTP))
+    config.value should be(Config(Protocol.HTTPS))
   }
 
   it should "fail to decode enum if value is missing" in {
@@ -69,7 +89,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
       .onEnv("SEV", "Bad")
 
-    case class Config(@env("SEV") bugSeverity: Severity) derives ConfigValue
+    case class Config(@env("SEV") bugSeverity: Severity) derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -83,12 +103,26 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     )
   }
 
+  it should "use default value if enum is missing" in {
+
+    given ConfigReader = ConfigReader.mocked
+
+    case class Config(@env("SEV") bugSeverity: Severity = Severity.Error)
+        derives ConfigLoader
+
+    // when
+    val config = load[Config]
+
+    // then
+    config.value should be(Config(Severity.Error))
+  }
+
   it should "decode enum with fields" in {
 
     given ConfigReader = ConfigReader.mocked
       .onEnv("ADMIN_NAME", "Jack")
 
-    case class Config(@env("ENV") user: User) derives ConfigValue
+    case class Config(@env("ENV") user: User) derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -102,7 +136,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     given ConfigReader = ConfigReader.mocked
 
     case class Config(@env("ENV") user: User = User.Regular("test@acme.com"))
-        derives ConfigValue
+        derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -117,7 +151,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onEnv("ADMIN_NAME", "Jack")
       .onEnv("USER_EMAIL", "jack@acme.com")
 
-    case class Config(@env("ENV") user: User) derives ConfigValue
+    case class Config(@env("ENV") user: User) derives ConfigLoader
 
     // when
     val config = load[Config]
@@ -126,16 +160,24 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     config.value should be(Config(User.Regular("jack@acme.com")))
   }
 
-}
+  it should "fail if enum case is missing annotations" in {
 
-object EnumsSpec {
-  enum Severity derives ConfigValue:
-    case Error
-    case Warning
+    // given
+    enum MedicalJob:
+      case MedicalDoctor(specialization: String)
+      case Nurse
 
-  object Nested {
-    enum NestedSeverity derives ConfigValue:
-      case Error
-      case Warning
+    given ConfigReader = ConfigReader.mocked
+
+    case class Config(job: MedicalJob) derives ConfigLoader
+
+    // when
+    val config = load[Config]
+
+    // then
+    config.left.value.getMessage should include(
+      "No annotations found for field: specialization"
+    )
   }
+
 }

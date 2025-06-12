@@ -2,7 +2,7 @@ package example
 
 import jurata.{*, given}
 
-enum Environment derives ConfigValue {
+enum Environment derives EnumConfigDecoder {
   case DEV, PROD, STAGING
 }
 
@@ -11,14 +11,14 @@ case class DbConfig(
   @env("DB_PORT") @prop("db.port") port: Int,
   @env("DB_USER") @prop("db.user") user: String,
   @env("DB_PASSWORD") @prop("db.password") password: Secret[String]
-) derives ConfigValue
+) derives ConfigLoader
 
 case class Config(
   @env("PORT") port: Int,
   @env("HOST") host: String,
   dbConfig: DbConfig,
   @env("ENV") env: Environment
-) derives ConfigValue
+) derives ConfigLoader
 
 @main def simpleApp(): Unit = {
   load[Config] match {

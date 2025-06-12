@@ -18,14 +18,6 @@ private[jurata] case class TypeMetadata[T](
 
 private[jurata] object Macros {
 
-  inline def fieldMetadata[A] = ${
-    fieldMetadataImpl[A]
-  }
-
-  inline def typeMetadata[A] = ${
-    typeMetadataImpl[A]
-  }
-
   private def filterAnnotation(using
       quotes: Quotes
   )(a: quotes.reflect.Term): Boolean =
@@ -41,6 +33,62 @@ private[jurata] object Macros {
     optExpr match
       case Some(e) => '{ Some($e) }
       case None => '{ None }
+
+  inline def isSingletonEnum[A] = ${
+    isSingletonEnumImpl[A]
+  }
+
+  private def isSingletonEnumImpl[A: Type](using
+      quotes: Quotes
+  ): Expr[Boolean] = {
+    import quotes.reflect.*
+
+    val result =
+      TypeRepr.of[A].typeSymbol.companionModule.methodMember("values").nonEmpty
+
+    Expr(result)
+  }
+
+  inline def enumCases[C]: Array[C] = ${
+    enumCasesImpl[C]
+  }
+
+  private def enumCasesImpl[C: Type](using quotes: Quotes): Expr[Array[C]] = {
+    import quotes.reflect.*
+
+    val typeSymbol = TypeRepr.of[C].typeSymbol
+
+    val valuesMethod =
+      typeSymbol.companionModule
+        .methodMember("values")
+        .headOption
+        .getOrElse(
+          report.errorAndAbort("Couldn't find values method, is this Enum?")
+        )
+
+    val companion = Ref(typeSymbol.companionModule)
+
+    Select.unique(companion, valuesMethod.name).asExprOf[Array[C]]
+  }
+
+  inline def decoderError[T] = ${
+    decoderErrorImpl[T]
+  }
+
+  private def decoderErrorImpl[T: Type](using
+      quotes: Quotes
+  ) = {
+    import quotes.reflect.*
+
+    val typeName = TypeRepr.of[T].typeSymbol.name
+
+    report.errorAndAbort(s"Couldn't find decoder for type $typeName")
+
+  }
+
+  inline def fieldMetadata[A] = ${
+    fieldMetadataImpl[A]
+  }
 
   private def fieldMetadataImpl[A: Type](using
       quotes: Quotes
@@ -102,6 +150,10 @@ private[jurata] object Macros {
       Map.from($values)
     }
 
+  inline def typeMetadata[A] = ${
+    typeMetadataImpl[A]
+  }
+
   private def typeMetadataImpl[A: Type](using
       quotes: Quotes
   ): Expr[TypeMetadata[A]] =
@@ -132,4 +184,15 @@ private[jurata] object Macros {
     '{
       TypeMetadata[A]($enumCases, $annotations, $name)
     }
+
+  inline def typeName[A] = ${
+    typeNameImpl[A]
+  }
+
+  private def typeNameImpl[A: Type](using
+      quotes: Quotes
+  ): Expr[String] =
+    import quotes.reflect.*
+    Expr(TypeRepr.of[A].typeSymbol.name)
+
 }
