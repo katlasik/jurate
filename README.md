@@ -119,11 +119,21 @@ case class DbConfig(
   @env("DB_USERNAME") username: String
 )
 
-
 val config = load[DbConfig]
 
 println(config) // Right(DbConfig(*****, user))
 ```
+
+## Collection
+You can load comma-separated values into collections. Currently it's not possible to change separator.
+
+```scala
+case class Numbers(@env("NUMBERS") List[Int])
+
+val result = load[Numbers]
+```
+
+With environment variable containing `"1,2,3"` the `result` will contain `Right(Numbers(List(1,2,3)))`.
 
 # Adding custom decoders
 You can add custom decoders for your types by implementing `ConfigDecoder` typeclass.
