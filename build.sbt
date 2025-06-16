@@ -1,7 +1,5 @@
 ThisBuild / scalaVersion := "3.6.2"
 
-libraryDependencies ++= Dependencies.All
-
 lazy val IntegrationTest: Configuration =
   config("integration") extend Test
 
@@ -19,6 +17,10 @@ lazy val root = (project in file("."))
   .configs(IntegrationTest)
   .configs(Examples)
   .settings(
+    organization := "jurata",
+    name := "jurata",
+    version := "0.13.0-SNAPSHOT",
+    libraryDependencies ++= Dependencies.All,
     inConfig(IntegrationTest)(
       Defaults.testSettings ++ Seq(
         fork := true

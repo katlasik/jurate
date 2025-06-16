@@ -2,7 +2,7 @@ package example
 
 import jurata.{*, given}
 
-enum Environment derives EnumConfigDecoder {
+enum Environment {
   case DEV, PROD, STAGING
 }
 
@@ -15,7 +15,7 @@ case class DbConfig(
 
 case class Config(
   @env("PORT") port: Int,
-  @env("HOST") host: String,
+  @env("HOST") host: String = "localhost",
   dbConfig: DbConfig,
   @env("ENV") env: Environment
 )

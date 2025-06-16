@@ -1,6 +1,5 @@
 # Intro
-Jurata is a simple library for instantiating case class instances from environment variables and system properties. You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then use the `derives` keyword to derive the typeclass `ConfigLoader` for your case class.
-Finally, you can load your config using `load` method.
+Jurata is a simple library for instantiating case class instances from environment variables and system properties. You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then you can load your config using `load` method.
 
 ```scala
 import jurata.{*, given}
@@ -69,10 +68,10 @@ case class Config(
 ```
 
 ## Enums
-You can load values of singleton enums (with no fields) using `@env` or `@prop` annotations. First, you need ot derive the `DecoderConfig` typeclass by adding `derives EnumConfigDecoder` to the enum defition. The library will automatically convert the loaded value to the enum case. Searching for the right enum case is case-sensitive.
+You can load values of singleton enums (with no fields) using `@env` or `@prop` annotations. The library will automatically convert the loaded value to the enum case. Searching for the right enum case is case-sensitive.
 
 ```scala
-enum Environment derives EnumConfigDecoder:
+enum Environment:
   case DEV, PROD, STAGING
 
 case class Config(

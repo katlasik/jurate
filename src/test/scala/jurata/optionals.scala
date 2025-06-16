@@ -9,7 +9,7 @@ class OptionalsSpec extends AnyFlatSpec with Matchers with EitherValues {
   it should "load optional value" in {
 
     // given
-    case class Config(@env("PORT") port: Option[Int]) derives ConfigLoader
+    case class Config(@env("PORT") port: Option[Int])
 
     given ConfigReader = ConfigReader.mocked
       .onEnv("PORT", "2000")
