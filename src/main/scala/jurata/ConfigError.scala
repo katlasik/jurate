@@ -28,7 +28,7 @@ case class ConfigError(reasons: List[ConfigErrorReason])
     ConfigError(reasons ++ other.reasons)
   }
 
-  def onlyContainsMissing: Boolean = {
+  private[jurata] def onlyContainsMissing: Boolean = {
     reasons.forall(_.missing)
   }
 

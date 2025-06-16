@@ -142,7 +142,7 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
   it should "load first matching case class in case of sealed trait" in {
 
     // given
-    sealed trait MessagingConfig derives ConfigLoader
+    sealed trait MessagingConfig
     case class KafkaConfig(@env("KAFKA_BROKER") broker: String)
         extends MessagingConfig
     case class Redis(@env("REDIS_CLUSTER") cluster: String)
@@ -163,7 +163,7 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
   it should "fail if there's no matching values for any of subclasses" in {
 
     // given
-    sealed trait MessagingConfig derives ConfigLoader
+    sealed trait MessagingConfig
     case class KafkaConfig(@env("KAFKA_BROKER") @prop("broker") broker: String)
         extends MessagingConfig
     case class Redis(@env("REDIS_CLUSTER") cluster: String)
@@ -186,7 +186,7 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
   it should "NOT fail if there's no matching values for any of subclasses but field is optional" in {
 
     // given
-    sealed trait MessagingConfig derives ConfigLoader
+    sealed trait MessagingConfig
     case class KafkaConfig(@env("KAFKA_BROKER") @prop("broker") broker: String)
         extends MessagingConfig
     case class Redis(@env("REDIS_CLUSTER") cluster: String)
@@ -206,7 +206,7 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
   it should "NOT fail if there's no matching values for any of subclasses but there's default value" in {
 
     // given
-    sealed trait MessagingConfig derives ConfigLoader
+    sealed trait MessagingConfig
     case class KafkaConfig(@env("KAFKA_BROKER") @prop("broker") broker: String)
         extends MessagingConfig
     case class Redis(@env("REDIS_CLUSTER") cluster: String)

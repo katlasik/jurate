@@ -10,12 +10,6 @@ private[jurata] case class FieldMetadata(
     default: Option[Any]
 )
 
-private[jurata] case class TypeMetadata[T](
-    enumCases: Option[Array[T]],
-    annotations: List[ConfigAnnotation],
-    name: String
-)
-
 private[jurata] object Macros {
 
   private def filterAnnotation(using

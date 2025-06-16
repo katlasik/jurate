@@ -5,7 +5,7 @@ import org.scalatest.EitherValues
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-enum Protocol derives EnumConfigDecoder:
+enum Protocol:
   case HTTP
   case HTTPS
 
@@ -15,12 +15,12 @@ enum User:
   case Admin(@env("ADMIN_NAME") name: String)
   case Banned(@prop("REASON") reason: String)
 
-enum Severity derives EnumConfigDecoder:
+enum Severity:
   case Error
   case Warning
 
 object Nested {
-  enum NestedSeverity derives EnumConfigDecoder:
+  enum NestedSeverity:
     case Error
     case Warning
 }

@@ -9,18 +9,19 @@ import scala.annotation.implicitNotFound
 import java.nio.file.{InvalidPathException, Path, Paths}
 import scala.collection.Factory
 
-given [T: ConfigDecoder] => ConfigDecoder[Option[T]] {
-  override def decode(raw: String): Either[ConfigError, Option[T]] =
-    ConfigDecoder[T].decode(raw).map(Some(_))
-}
-
 given [T: ConfigLoader] => ConfigLoader[Option[T]] =
-  new ConfigLoader[Option[T]](reader =>
-    ConfigLoader[T].load(reader).map(Some(_))
-  )
+  ConfigLoader[T] match {
+    case decoder: ConfigDecoder[_] =>
+      new ConfigDecoder[Option[T]] {
+        override def decode(raw: String): Either[ConfigError, Option[T]] =
+          decoder.decode(raw).map(Some(_))
+      }
+    case handler: ConfigHandler[_] =>
+      new ConfigHandler[Option[T]](reader => handler.load(reader).map(Some(_)))
+  }
 
 given [T, C[T] <: Seq[T]](using
-    decoder: ConfigDecoder[T],
+    decoder: ConfigLoader[T],
     factory: Factory[T, C[T]],
     eitherFactory: Factory[Either[ConfigError, T], C[Either[ConfigError, T]]]
 ): ConfigDecoder[C[T]] =
@@ -29,7 +30,7 @@ given [T, C[T] <: Seq[T]](using
       raw
         .split(",")
         .map(_.trim)
-        .map(decoder.decode)
+        .map(decoder.asDecoder.decode)
         .to(eitherFactory)
     )
 

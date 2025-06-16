@@ -6,7 +6,30 @@ import jurata.utils.Macros.*
 import scala.deriving.Mirror
 import scala.compiletime.*
 
-final class ConfigLoader[C](val load: ConfigReader => Either[ConfigError, C])
+trait ConfigLoader[C] {
+  def load(reader: ConfigReader): Either[ConfigError, C] =
+    this match {
+      case ConfigHandler(handle) => handle(reader)
+      case _ =>
+        throw new UnsupportedOperationException(
+          "You should only load config using ConfigHandler!"
+        )
+    }
+
+  def asDecoder: ConfigDecoder[C] =
+    this match {
+      case decoder: ConfigDecoder[C] => decoder
+      case _ =>
+        throw new UnsupportedOperationException(
+          s"Unexpected! This is not ConfigDecoder: ${getClass().getName()}"
+        )
+    }
+
+}
+
+final case class ConfigHandler[C](
+    val handle: ConfigReader => Either[ConfigError, C]
+) extends ConfigLoader[C]
 
 object ConfigLoader:
 
@@ -20,7 +43,7 @@ object ConfigLoader:
   private inline def derivedMirrorProduct[T](
       product: Mirror.ProductOf[T]
   ): ConfigLoader[T] =
-    new ConfigLoader[T](reader =>
+    new ConfigHandler[T](reader =>
       aggregate(
         deriveProduct[
           product.MirroredElemLabels,
@@ -47,42 +70,45 @@ object ConfigLoader:
         val fieldMetadata = metadata(label)
 
         val value = summonFrom {
-          case decoder: ConfigDecoder[`p`] =>
-            if fieldMetadata.annotations.isEmpty then
-              Left(
-                ConfigError.other(s"No annotations found for field: $label")
-              )
-            else
-              reader.read(fieldMetadata.annotations) match {
-                case Right(raw) => decoder.decode(raw)
-                case Left(e) if e.onlyContainsMissing =>
-                  fieldMetadata.default match {
-                    case Some(d) => Right(d)
-                    case None =>
-                      inline erasedValue[p] match {
-                        case _: Option[_] =>
-                          Right(None)
-                        case _ =>
-                          Left(e)
-                      }
-                  }
-                case Left(e) => Left(e)
-              }
           case loader: ConfigLoader[`p`] =>
-            loader.load(reader) match {
-              case Right(v) => Right(v)
-              case Left(e) if e.onlyContainsMissing =>
-                fieldMetadata.default match {
-                  case Some(d) => Right(d)
-                  case None =>
-                    inline erasedValue[p] match {
-                      case _: Option[_] =>
-                        Right(None)
-                      case _ =>
-                        Left(e)
+            loader match {
+              case decoder: ConfigDecoder[_] =>
+                if fieldMetadata.annotations.isEmpty then
+                  Left(
+                    ConfigError.other(s"No annotations found for field: $label")
+                  )
+                else
+                  reader.read(fieldMetadata.annotations) match {
+                    case Right(raw) => decoder.decode(raw)
+                    case Left(e) if e.onlyContainsMissing =>
+                      fieldMetadata.default match {
+                        case Some(d) => Right(d)
+                        case None =>
+                          inline erasedValue[p] match {
+                            case _: Option[_] =>
+                              Right(None)
+                            case _ =>
+                              Left(e)
+                          }
+                      }
+                    case Left(e) => Left(e)
+                  }
+              case handler: ConfigHandler[_] =>
+                handler.load(reader) match {
+                  case Right(v) => Right(v)
+                  case Left(e) if e.onlyContainsMissing =>
+                    fieldMetadata.default match {
+                      case Some(d) => Right(d)
+                      case None =>
+                        inline erasedValue[p] match {
+                          case _: Option[_] =>
+                            Right(None)
+                          case _ =>
+                            Left(e)
+                        }
                     }
+                  case Left(e) => Left(e)
                 }
-              case Left(e) => Left(e)
             }
           case _ => decoderError[p]
         }
@@ -150,8 +176,11 @@ object ConfigLoader:
       sum: Mirror.SumOf[T]
   ): ConfigLoader[T] =
     inline if isSingletonEnum[T] then
-      error("You need to derive EnumConfigDecoder for singleton enums")
+      val cases = enumCases[T]
+      val name = typeName[T]
+
+      new EnumConfigDecoder(cases, name)
     else
-      new ConfigLoader[T](reader =>
+      new ConfigHandler[T](reader =>
         deriveSum[T, sum.MirroredElemTypes, sum.MirroredLabel](reader)
       )
