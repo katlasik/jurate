@@ -19,7 +19,7 @@ lazy val root = (project in file("."))
   .settings(
     organization := "jurata",
     name := "jurata",
-    version := "0.13.0-SNAPSHOT",
+    version := "0.1.0-SNAPSHOT",
     libraryDependencies ++= Dependencies.All,
     inConfig(IntegrationTest)(
       Defaults.testSettings ++ Seq(
