@@ -1,6 +1,6 @@
-package jurata
+package jurate
 
-import jurata.utils.aggregate
+import jurate.utils.aggregate
 
 import java.io.File
 import java.net.{InetAddress, URI, UnknownHostException}

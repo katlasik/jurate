@@ -1,4 +1,4 @@
-package jurata
+package jurate
 
 trait ConfigErrorReason {
   def missing: Boolean
@@ -28,7 +28,7 @@ case class ConfigError(reasons: List[ConfigErrorReason])
     ConfigError(reasons ++ other.reasons)
   }
 
-  private[jurata] def onlyContainsMissing: Boolean = {
+  private[jurate] def onlyContainsMissing: Boolean = {
     reasons.forall(_.missing)
   }
 

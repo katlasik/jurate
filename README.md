@@ -1,8 +1,8 @@
 # Intro
-Jurata is a simple library for instantiating case class instances from environment variables and system properties. You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then you can load your config using `load` method.
+Jurate is a simple library for instantiating case class instances from environment variables and system properties. You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then you can load your config using `load` method.
 
 ```scala
-import jurata.{*, given}
+import jurate.{*, given}
 
 case class DbConfig(
   @env("DB_PASSWORD") password: Secret[String],
@@ -12,18 +12,18 @@ case class DbConfig(
 case class Config(
   @env("HOST") host: String,
   @env("PORT") port: Int = 8080,
-  @env("ADMIN_EMAIL") adminEmail: Option[String],          
+  @env("ADMIN_EMAIL") adminEmail: Option[String],
   @prop("app.debug") debug: Boolean,
-  dbConfig: DbConfig
+dbConfig: DbConfig
 )
 
-load[Config] //Right(Config(localhost, 8080, None, true, DbConfig(*****, user)))
+load[Config] // Right(Config(localhost, 8080, None, true, DbConfig(*****, user)))
 ```
 
 You have to import givens using:
 
 ```scala
-import jurata.{*, given}
+import jurate.{*, given}
 ```
 
 This provides instance of `ConfigReader` which is required to load values from environment or system properties.
@@ -36,7 +36,7 @@ You can also provide a default value for a field, which will be used if the valu
 
 ```scala
 case class Config(
-   @prop("debug.email") @env("EMAIL") @env("ADMIN_EMAIL") email: String = "foo@bar.com"
+  @prop("debug.email") @env("EMAIL") @env("ADMIN_EMAIL") email: String = "foo@bar.com"
 )
 ```
 
@@ -87,7 +87,7 @@ given ConfigDecoder[Environment] = new ConfigDecoder[Environment]:
     val rawLowercased = raw.trim().toLowerCase()
     Environment.values
       .find(_.toString().toLowerCase() == rawLowercased)
-      .toRight(Environment.invalid(s"Couldn't find right value for Protocol", raw))
+      .toRight(ConfigError.invalid(s"Couldn't find right value for Protocol", raw))
 ```
 
 ## Subclasses
@@ -128,7 +128,7 @@ println(config) // Right(DbConfig(*****, user))
 You can load comma-separated values into collections. Currently it's not possible to change separator.
 
 ```scala
-case class Numbers(@env("NUMBERS") List[Int])
+case class Numbers(@env("NUMBERS") numbers: List[Int])
 
 val result = load[Numbers]
 ```
@@ -143,8 +143,8 @@ You can add custom decoders for your types by implementing `ConfigDecoder` typec
 class MyClass(val value: String)
 
 given ConfigDecoder[MyClass] with {
-  def decode(value: String): Either[String, MyClass] = {
-    if (value.isEmpty) Left("Value is empty")
+  def decode(value: String): Either[ConfigError, MyClass] = {
+    if (value.isEmpty) Left(ConfigError.invalid("Value is empty", value))
     else Right(new MyClass(value))
   }
 }

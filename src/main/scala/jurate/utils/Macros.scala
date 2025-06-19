@@ -1,23 +1,23 @@
-package jurata.utils
+package jurate.utils
 
 import scala.quoted.Quotes
 import scala.quoted.Type
 import scala.quoted.Expr
-import jurata.ConfigAnnotation
+import jurate.ConfigAnnotation
 
-private[jurata] case class FieldMetadata(
+private[jurate] case class FieldMetadata(
     annotations: List[ConfigAnnotation],
     default: Option[Any]
 )
 
-private[jurata] object Macros {
+private[jurate] object Macros {
 
   private def filterAnnotation(using
       quotes: Quotes
   )(a: quotes.reflect.Term): Boolean =
     import quotes.reflect.*
     scala.util
-      .Try(a.tpe <:< TypeRepr.of[jurata.ConfigAnnotation])
+      .Try(a.tpe <:< TypeRepr.of[jurate.ConfigAnnotation])
       .toOption
       .contains(true)
 
@@ -122,7 +122,7 @@ private[jurata] object Macros {
             val annotations = Expr.ofList(
               field.annotations
                 .filter(filterAnnotation)
-                .map(_.asExpr.asExprOf[jurata.ConfigAnnotation])
+                .map(_.asExpr.asExprOf[jurate.ConfigAnnotation])
                 .reverse
             )
 

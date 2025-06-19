@@ -1,10 +1,10 @@
-package jurata
+package jurate
 
 trait ConfigReader {
   def readEnv(name: String): Option[String]
   def readProp(name: String): Option[String]
 
-  private[jurata] def read(
+  private[jurate] def read(
       annotations: Seq[ConfigAnnotation]
   ): Either[ConfigError, String] = {
 

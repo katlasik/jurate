@@ -1,5 +1,5 @@
-package jurata
-import jurata.{*, given}
+package jurate
+import jurate.{*, given}
 
 case class DbConfig(
   @env("DB_HOST") @prop("db.host") host: String,

@@ -1,6 +1,6 @@
-package jurata
+package jurate
 
-import jurata.Nested.NestedSeverity
+import jurate.Nested.NestedSeverity
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

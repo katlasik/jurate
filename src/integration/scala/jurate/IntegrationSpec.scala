@@ -1,4 +1,4 @@
-package jurata
+package jurate
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -15,7 +15,7 @@ class IntegrationSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     //when
     val process = Process(
-      """sbt "integration:runMain jurata.app"""",
+      """sbt "integration:runMain jurate.app"""",
       None,
       "DB_HOST" -> "localhost",
       "DB_PORT" -> "5432",
@@ -49,7 +49,7 @@ class IntegrationSpec extends AnyFlatSpec with Matchers with EitherValues {
       case (key, value) => s""""-D$key=$value""""
     }.mkString(",")
 
-    val command = s"""sbt 'set javaOptions ++= Seq($props)' "integration:runMain jurata.app""""
+    val command = s"""sbt 'set javaOptions ++= Seq($props)' "integration:runMain jurate.app""""
     val process = Process(command, None)
 
     val result = process.run(logger)
@@ -67,7 +67,7 @@ class IntegrationSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     //when
     val process = Process(
-      """sbt "integration:runMain jurata.app"""",
+      """sbt "integration:runMain jurate.app"""",
       None
     )
     val result = process.run(logger)

@@ -1,9 +1,9 @@
-package jurata.utils
+package jurate.utils
 
-import jurata.ConfigDecoder
-import jurata.ConfigError
+import jurate.ConfigDecoder
+import jurate.ConfigError
 
-private[jurata] final class EnumConfigDecoder[C](
+private[jurate] final class EnumConfigDecoder[C](
     values: Array[C],
     enumName: String
 ) extends ConfigDecoder[C]:

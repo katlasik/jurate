@@ -1,4 +1,4 @@
-package jurata
+package jurate
 
 import org.scalatest.*
 import org.scalatest.flatspec.AnyFlatSpec
@@ -22,15 +22,15 @@ class OpaqueTypesSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // given
     given ConfigReader = ConfigReader.mocked
-      .onProp("config.name", "jurata")
+      .onProp("config.name", "jurate")
 
-    case class Config(@jurata.prop("config.name") name: Name)
+    case class Config(@jurate.prop("config.name") name: Name)
 
     // when
     val config = load[Config]
 
     // then
-    config.value should be(Config(Name("jurata")))
+    config.value should be(Config(Name("jurate")))
 
   }
 }

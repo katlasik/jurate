@@ -1,7 +1,7 @@
-package jurata
+package jurate
 
-import jurata.utils.*
-import jurata.utils.Macros.*
+import jurate.utils.*
+import jurate.utils.Macros.*
 
 import scala.deriving.Mirror
 import scala.compiletime.*

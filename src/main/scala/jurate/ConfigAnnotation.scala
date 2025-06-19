@@ -1,8 +1,8 @@
-package jurata
+package jurate
 
 import scala.annotation.StaticAnnotation
 
-private[jurata] sealed trait ConfigAnnotation extends StaticAnnotation
+private[jurate] sealed trait ConfigAnnotation extends StaticAnnotation
 
 case class env(name: String) extends ConfigAnnotation
 

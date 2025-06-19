@@ -1,4 +1,4 @@
-package jurata
+package jurate
 
 case class Secret[V](value: V) extends AnyVal {
   override def toString: String = "*****"

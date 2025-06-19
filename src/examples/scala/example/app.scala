@@ -1,6 +1,6 @@
 package example
 
-import jurata.{*, given}
+import jurate.{*, given}
 
 enum Environment {
   case DEV, PROD, STAGING

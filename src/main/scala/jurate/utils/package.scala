@@ -1,9 +1,9 @@
-package jurata.utils
+package jurate.utils
 
-import jurata.*
+import jurate.*
 import scala.collection.Factory
 
-private[jurata] def aggregate[T, C[T] <: Seq[T]](
+private[jurate] def aggregate[T, C[T] <: Seq[T]](
     values: C[Either[ConfigError, T]]
 )(using factory: Factory[T, C[T]]): Either[ConfigError, C[T]] =
   values.foldLeft(

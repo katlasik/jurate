@@ -1,4 +1,4 @@
-package jurata
+package jurate
 
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AnyFlatSpec

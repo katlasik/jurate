@@ -1,4 +1,4 @@
-package jurata
+package jurate
 
 import scala.sys.process.ProcessLogger
 

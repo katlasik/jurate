@@ -1,6 +1,6 @@
-package jurata
+package jurate
 
-import jurata.{*, given}
+import jurate.{*, given}
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

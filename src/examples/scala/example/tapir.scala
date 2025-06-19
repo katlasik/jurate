@@ -2,7 +2,7 @@ package example
 
 import sttp.tapir.*
 import sttp.tapir.server.netty.sync.NettySyncServer
-import jurata.{*, given}
+import jurate.{*, given}
 import ox.*
 import ox.either.*
 import scala.io.StdIn.readLine

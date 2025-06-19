@@ -1,4 +1,4 @@
-package jurata
+package jurate
 
 trait ConfigDecoder[C] extends ConfigLoader[C]:
   def decode(raw: String): Either[ConfigError, C]
