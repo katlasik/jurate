@@ -8,6 +8,7 @@ import java.net.{InetAddress, URI}
 import java.nio.file.{Path, Paths}
 import java.util.UUID
 import org.scalatest.prop.TableDrivenPropertyChecks
+import scala.concurrent.duration.Duration
 
 class DecodersSpec
     extends AnyFlatSpec
@@ -226,6 +227,36 @@ class DecodersSpec
     given ConfigReader = ConfigReader.mocked.onEnv("FLAG", "maybe")
 
     case class Config(@env("FLAG") value: Boolean)
+
+    load[Config].left.value shouldBe a[ConfigError]
+  }
+
+  behavior of "ConfigDecoder for Duration"
+
+  it should "correctly decode valid duration strings" in {
+
+    val validDurations = Table(
+      ("input", "expected"),
+      ("5 minutes", Duration.apply(5, "minute")),
+      ("2m", Duration.apply(2, "minute")),
+      ("33s", Duration.apply(33, "second")),
+      ("3 days", Duration.apply(3, "day")),
+      ("3 ns", Duration.apply(3, "nanoseconds"))
+    )
+
+    forAll(validDurations) { (input: String, expected: Duration) =>
+      given ConfigReader = ConfigReader.mocked.onEnv("DURATION", input)
+
+      case class Config(@env("DURATION") value: Duration)
+
+      load[Config].value shouldBe Config(expected)
+    }
+  }
+
+  it should "fail to decode invalid Duration" in {
+    given ConfigReader = ConfigReader.mocked.onEnv("DURATION", "1 car")
+
+    case class Config(@env("DURATION") value: Duration)
 
     load[Config].left.value shouldBe a[ConfigError]
   }

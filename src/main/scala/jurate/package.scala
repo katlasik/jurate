@@ -8,6 +8,7 @@ import java.util.UUID
 import scala.annotation.implicitNotFound
 import java.nio.file.{InvalidPathException, Path, Paths}
 import scala.collection.Factory
+import scala.concurrent.duration.Duration
 
 given [T: ConfigLoader] => ConfigLoader[Option[T]] =
   ConfigLoader[T] match {
@@ -148,6 +149,19 @@ given ConfigDecoder[URI] with {
       case e: IllegalArgumentException =>
         Left(
           ConfigError.invalid(s"can't decode URI value: ${e.getMessage}", raw)
+        )
+}
+
+given ConfigDecoder[Duration] with {
+  override def decode(raw: String): Either[ConfigError, Duration] =
+    try Right(Duration.create(raw))
+    catch
+      case e: NumberFormatException =>
+        Left(
+          ConfigError.invalid(
+            s"can't decode Duration value: ${e.getMessage}",
+            raw
+          )
         )
 }
 
