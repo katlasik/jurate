@@ -37,7 +37,6 @@ inThisBuild(
 
 ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 
-
 lazy val root = (project in file("."))
   .configs(IntegrationTest)
   .configs(Examples)

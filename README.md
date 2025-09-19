@@ -1,4 +1,9 @@
-# Intro
+
+# Jurate
+
+[![Maven Central](https://maven-badges.sml.io/maven-central/io.github.katlasik/jurate_3/badge.svg)](https://maven-badges.sml.io/maven-central/io.github.katlasik/jurate_3)
+## Intro
+
 Jurate is a simple library for instantiating case class instances from environment variables and system properties. You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then you can load your config using `load` method.
 
 ```scala
@@ -169,4 +174,12 @@ given ConfigReader = ConfigReader
 
 load[DbConfig] // Right(DbConfig("localhost", "mypass"))
 
+```
+
+# Examples
+You can find more examples under [src/examples](./src/examples/scala). 
+You can run them using `sbt "runMain <example-class>"` command (set necessary environment variables first). For instance:
+
+```bash
+sbt "Examples/runMain example.simpleApp"
 ```
