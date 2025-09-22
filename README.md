@@ -178,8 +178,8 @@ load[DbConfig] // Right(DbConfig("localhost", "mypass"))
 
 # Examples
 You can find more examples under [src/examples](./src/examples/scala). 
-You can run them using `sbt "runMain <example-class>"` command (set necessary environment variables first). For instance:
+You can run them using `sbt "examples/runMain <example-class>"` command (set necessary environment variables first). For instance:
 
 ```bash
-sbt "Examples/runMain example.simpleApp"
+sbt "examples/runMain jurate.simpleApp"
 ```

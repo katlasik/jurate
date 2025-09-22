@@ -21,10 +21,10 @@ jobs:
         uses: sbt/setup-sbt@v1
 
       - name: Verify code format
-        run: sbt scalafmtCheck Examples/scalafmtCheck Integration/scalafmtCheck Test/scalafmtCheck
+        run: sbt scalafmtCheckAll
 
       - name: Compile
-        run: sbt compile Examples/compile Integration/compile Test/compile
+        run: sbt compile examples/compile integrationTests/compile integrationTests/Test/compile Test/compile
 
       - name: Run Unit Tests
         run: sbt test

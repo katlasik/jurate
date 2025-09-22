@@ -1,9 +1,8 @@
 package jurate.utils
 
-import scala.quoted.Quotes
-import scala.quoted.Type
-import scala.quoted.Expr
 import jurate.ConfigAnnotation
+
+import scala.quoted.{Expr, Quotes, Type}
 
 private[jurate] case class FieldMetadata(
     annotations: List[ConfigAnnotation],

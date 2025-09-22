@@ -12,12 +12,7 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 ThisBuild / versionScheme := Some("early-semver")
-
-lazy val IntegrationTest: Configuration =
-  config("integration") extend Test
-
-lazy val Examples: Configuration =
-  config("examples") extend Compile
+ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 
 inThisBuild(
   List(
@@ -35,20 +30,34 @@ inThisBuild(
   )
 )
 
-ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
-
-lazy val root = (project in file("."))
-  .configs(IntegrationTest)
-  .configs(Examples)
+lazy val core = (project in file("core"))
   .settings(
     name := "jurate",
-    libraryDependencies ++= Dependencies.All,
+    libraryDependencies ++= Dependencies.Testing,
     publishTo := sonatypePublishToBundle.value,
     publishMavenStyle := true,
-    inConfig(IntegrationTest)(
-      Defaults.testSettings ++ Seq(
-        fork := true
-      )
-    ),
-    inConfig(Examples)(Defaults.compileSettings),
+    publish / skip := false
+  )
+
+lazy val examples = (project in file("examples"))
+  .dependsOn(core)
+  .settings(
+    name := "examples",
+    libraryDependencies ++= Dependencies.Examples,
+    publish / skip := true
+  )
+
+lazy val integrationTests = (project in file("integration-tests"))
+  .dependsOn(core)
+  .settings(
+    name := "integration-tests",
+    libraryDependencies ++= Dependencies.Testing,
+    publish / skip := true
+  )
+
+lazy val root = (project in file("."))
+  .aggregate(core, examples, integrationTests)
+  .settings(
+    name := "root",
+    publish / skip := true
   )
