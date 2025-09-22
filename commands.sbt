@@ -1,4 +1,4 @@
 addCommandAlias(
   "integrationTest",
-  "Integration/test"
+  "integrationTests/test"
 )

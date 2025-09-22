@@ -8,16 +8,15 @@ import ox.either.*
 import scala.io.StdIn.readLine
 
 case class HttpConfig(
-  @env("HTTP_HOST") host: String = "localhost",
-  @env("HTTP_PORT") port: Int = 8080
+    @env("HTTP_HOST") host: String = "localhost",
+    @env("HTTP_PORT") port: Int = 8080
 )
 
 @main def helloWorldTapir(): Unit = supervised:
 
   val config: HttpConfig = load[HttpConfig].orThrow
 
-  val helloEndpoint = endpoint
-    .get
+  val helloEndpoint = endpoint.get
     .in("hello")
     .in(query[String]("name"))
     .out(stringBody)
@@ -36,4 +35,3 @@ case class HttpConfig(
   println("Stopping server...")
   handle.stop()
   println("Server stopped.")
-

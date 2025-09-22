@@ -28,7 +28,7 @@ trait ConfigLoader[C] {
 }
 
 final case class ConfigHandler[C](
-    val handle: ConfigReader => Either[ConfigError, C]
+    handle: ConfigReader => Either[ConfigError, C]
 ) extends ConfigLoader[C]
 
 object ConfigLoader:
