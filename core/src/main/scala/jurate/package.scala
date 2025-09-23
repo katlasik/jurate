@@ -8,7 +8,7 @@ import java.util.UUID
 import scala.annotation.implicitNotFound
 import java.nio.file.{InvalidPathException, Path, Paths}
 import scala.collection.Factory
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 given [T: ConfigLoader] => ConfigLoader[Option[T]] =
   ConfigLoader[T] match {
@@ -163,6 +163,12 @@ given ConfigDecoder[Duration] with {
             raw
           )
         )
+}
+
+given ConfigDecoder[FiniteDuration] = ConfigDecoder[Duration].emap {
+  case (fd: FiniteDuration, _) => Right(fd)
+  case (_, raw) =>
+    Left(ConfigError.invalid(s"expected finite duration but got infinite", raw))
 }
 
 def load[C](using

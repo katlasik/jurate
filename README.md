@@ -19,7 +19,7 @@ case class Config(
   @env("PORT") port: Int = 8080,
   @env("ADMIN_EMAIL") adminEmail: Option[String],
   @prop("app.debug") debug: Boolean,
-dbConfig: DbConfig
+  dbConfig: DbConfig
 )
 
 load[Config] // Right(Config(localhost, 8080, None, true, DbConfig(*****, user)))
@@ -84,7 +84,7 @@ case class Config(
 )
 ```
 
-If you want to customize how enum is loaded you can provide your own instance of `ConfigDecoder`:
+If you want to customize loading of enum you can provide your own instance of `ConfigDecoder`:
 
 ```scala
 given ConfigDecoder[Environment] = new ConfigDecoder[Environment]:
@@ -92,7 +92,7 @@ given ConfigDecoder[Environment] = new ConfigDecoder[Environment]:
     val rawLowercased = raw.trim().toLowerCase()
     Environment.values
       .find(_.toString().toLowerCase() == rawLowercased)
-      .toRight(ConfigError.invalid(s"Couldn't find right value for Protocol", raw))
+      .toRight(ConfigError.invalid(s"Couldn't find right value for Environment", raw))
 ```
 
 ## Subclasses
