@@ -8,7 +8,7 @@ import java.net.{InetAddress, URI}
 import java.nio.file.{Path, Paths}
 import java.util.UUID
 import org.scalatest.prop.TableDrivenPropertyChecks
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration, _}
 
 class DecodersSpec
     extends AnyFlatSpec
@@ -295,6 +295,43 @@ class DecodersSpec
     given ConfigReader = ConfigReader.mocked.onEnv("URI", uriStr)
 
     case class Config(@env("URI") value: URI)
+
+    load[Config].left.value shouldBe a[ConfigError]
+  }
+
+  behavior of "ConfigDecoder for FiniteDuration"
+
+  it should "correctly decode valid finite duration strings" in {
+    val validFiniteDurations = Table(
+      ("input", "expected"),
+      ("5 minutes", 5.minutes),
+      ("2m", 2.minutes),
+      ("33s", 33.seconds),
+      ("3 days", 3.days),
+      ("3 ns", 3.nanos)
+    )
+
+    forAll(validFiniteDurations) { (input: String, expected: FiniteDuration) =>
+      given ConfigReader = ConfigReader.mocked.onEnv("FINITE_DURATION", input)
+
+      case class Config(@env("FINITE_DURATION") value: FiniteDuration)
+
+      load[Config].value shouldBe Config(expected)
+    }
+  }
+
+  it should "fail to decode infinite durations" in {
+    given ConfigReader = ConfigReader.mocked.onEnv("FINITE_DURATION", "Inf")
+
+    case class Config(@env("FINITE_DURATION") value: FiniteDuration)
+
+    load[Config].left.value shouldBe a[ConfigError]
+  }
+
+  it should "fail to decode invalid FiniteDuration" in {
+    given ConfigReader = ConfigReader.mocked.onEnv("FINITE_DURATION", "1 car")
+
+    case class Config(@env("FINITE_DURATION") value: FiniteDuration)
 
     load[Config].left.value shouldBe a[ConfigError]
   }
