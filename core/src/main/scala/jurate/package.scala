@@ -14,8 +14,8 @@ given [T: ConfigLoader] => ConfigLoader[Option[T]] =
   ConfigLoader[T] match {
     case decoder: ConfigDecoder[_] =>
       new ConfigDecoder[Option[T]] {
-        override def decode(raw: String): Either[ConfigError, Option[T]] =
-          decoder.decode(raw).map(Some(_))
+        override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Option[T]] =
+          decoder.decode(raw, ctx).map(Some(_))
       }
     case handler: ConfigHandler[_] =>
       new ConfigHandler[Option[T]](reader => handler.load(reader).map(Some(_)))
@@ -26,149 +26,151 @@ given [T, C[T] <: Seq[T]](using
     factory: Factory[T, C[T]],
     eitherFactory: Factory[Either[ConfigError, T], C[Either[ConfigError, T]]]
 ): ConfigDecoder[C[T]] =
-  raw =>
+  (raw, ctx) =>
     aggregate(
       raw
         .split(",")
         .map(_.trim)
-        .map(decoder.asDecoder.decode)
+        .map(decoder.asDecoder.decode(_, ctx))
         .to(eitherFactory)
     )
 
 given ConfigDecoder[String] with {
-  override def decode(raw: String): Either[ConfigError, String] = Right(raw)
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, String] = Right(raw)
 }
 
 given ConfigDecoder[Short] with {
-  override def decode(raw: String): Either[ConfigError, Short] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Short] = try
     Right(raw.toShort)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid("can't decode short value", raw))
+      Left(ConfigError.invalid("can't decode short value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[Int] with {
-  override def decode(raw: String): Either[ConfigError, Int] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Int] = try
     Right(raw.toInt)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode integer", raw))
+      Left(ConfigError.invalid(s"can't decode integer", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[Long] with {
-  override def decode(raw: String): Either[ConfigError, Long] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Long] = try
     Right(raw.toLong)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode long", raw))
+      Left(ConfigError.invalid(s"can't decode long", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[Float] with {
-  override def decode(raw: String): Either[ConfigError, Float] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Float] = try
     Right(raw.toFloat)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode double value", raw))
+      Left(ConfigError.invalid(s"can't decode double value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[Double] with {
-  override def decode(raw: String): Either[ConfigError, Double] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Double] = try
     Right(raw.toDouble)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode double value", raw))
+      Left(ConfigError.invalid(s"can't decode double value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[BigDecimal] with {
-  override def decode(raw: String): Either[ConfigError, BigDecimal] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, BigDecimal] = try
     Right(BigDecimal(raw))
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode BigDecimal value", raw))
+      Left(ConfigError.invalid(s"can't decode BigDecimal value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[BigInt] with {
-  override def decode(raw: String): Either[ConfigError, BigInt] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, BigInt] = try
     Right(BigInt(raw))
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode BigInt value", raw))
+      Left(ConfigError.invalid(s"can't decode BigInt value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[InetAddress] with {
-  override def decode(raw: String): Either[ConfigError, InetAddress] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, InetAddress] = try
     Right(InetAddress.getByName(raw))
   catch
     case e: UnknownHostException =>
       Left(
         ConfigError.invalid(
           s"can't decode InetAddress value: ${e.getMessage}",
-          raw
+          raw,
+          ctx.annotations.headOption
         )
       )
 }
 
 given ConfigDecoder[UUID] with {
-  override def decode(raw: String): Either[ConfigError, UUID] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, UUID] = try
     Right(UUID.fromString(raw))
   catch
     case e: IllegalArgumentException =>
       Left(
-        ConfigError.invalid(s"can't decode UUID value: ${e.getMessage}", raw)
+        ConfigError.invalid(s"can't decode UUID value: ${e.getMessage}", raw, ctx.annotations.headOption)
       )
 }
 
 given ConfigDecoder[Path] with {
-  override def decode(raw: String): Either[ConfigError, Path] = try
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Path] = try
     Right(Paths.get(raw))
   catch
     case e: InvalidPathException =>
       Left(
-        ConfigError.invalid(s"can't decode Path value: ${e.getMessage}", raw)
+        ConfigError.invalid(s"can't decode Path value: ${e.getMessage}", raw, ctx.annotations.headOption)
       )
 }
 
 given ConfigDecoder[File] with {
-  override def decode(raw: String): Either[ConfigError, File] = Right(
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, File] = Right(
     new File(raw)
   )
 }
 
 given ConfigDecoder[Boolean] with {
-  override def decode(raw: String): Either[ConfigError, Boolean] =
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Boolean] =
     raw.toLowerCase match
       case "true" | "yes" | "1" => Right(true)
       case "false" | "no" | "0" => Right(false)
-      case _ => Left(ConfigError.invalid(s"can't decode boolean value", raw))
+      case _ => Left(ConfigError.invalid(s"can't decode boolean value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[URI] with {
-  override def decode(raw: String): Either[ConfigError, URI] =
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, URI] =
     try Right(URI.create(raw))
     catch
       case e: IllegalArgumentException =>
         Left(
-          ConfigError.invalid(s"can't decode URI value: ${e.getMessage}", raw)
+          ConfigError.invalid(s"can't decode URI value: ${e.getMessage}", raw, ctx.annotations.headOption)
         )
 }
 
 given ConfigDecoder[Duration] with {
-  override def decode(raw: String): Either[ConfigError, Duration] =
+  override def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Duration] =
     try Right(Duration.create(raw))
     catch
       case e: NumberFormatException =>
         Left(
           ConfigError.invalid(
             s"can't decode Duration value: ${e.getMessage}",
-            raw
+            raw, 
+            ctx.annotations.headOption
           )
         )
 }
 
 given ConfigDecoder[FiniteDuration] = ConfigDecoder[Duration].emap {
-  case (fd: FiniteDuration, _) => Right(fd)
-  case (_, raw) =>
-    Left(ConfigError.invalid(s"expected finite duration but got infinite", raw))
+  case (fd: FiniteDuration, _, _) => Right(fd)
+  case (_, raw, ctx) =>
+    Left(ConfigError.invalid(s"expected finite duration but got infinite", raw, ctx.annotations.headOption))
 }
 
 def load[C](using

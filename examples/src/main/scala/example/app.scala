@@ -27,7 +27,7 @@ case class Config(
       println(
         s"Starting app on ${config.host}:${config.port} on env ${config.env}"
       )
-    case Left(errors) =>
-      println(errors)
+    case Left(error) =>
+      println(error)
   }
 }

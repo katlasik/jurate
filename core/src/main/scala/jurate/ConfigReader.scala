@@ -5,12 +5,13 @@ trait ConfigReader {
   def readProp(name: String): Option[String]
 
   private[jurate] def read(
+      fieldName: String,
       annotations: Seq[ConfigAnnotation]
   ): Either[ConfigError, String] = {
 
     def iterate(values: Seq[ConfigAnnotation]): Either[ConfigError, String] =
 
-      if values.isEmpty then Left(ConfigError.missing(annotations))
+      if values.isEmpty then Left(ConfigError.missing(fieldName, annotations))
       else
         val maybeValue = values.head match
           case env(name) =>

@@ -41,7 +41,7 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // then
     config.left.value should be(
-      ConfigError.missing(IArray(env("HOST"), prop("http.host")))
+      ConfigError.missing("host", IArray(env("HOST"), prop("http.host")))
     )
   }
 
@@ -118,7 +118,7 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // then
     config.left.value should be(
-      ConfigError.invalid("can't decode integer", "Bad")
+      ConfigError.invalid("can't decode integer", "Bad", Some(env("PORT")))
     )
   }
 

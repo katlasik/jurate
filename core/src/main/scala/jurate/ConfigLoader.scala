@@ -75,11 +75,11 @@ object ConfigLoader:
               case decoder: ConfigDecoder[_] =>
                 if fieldMetadata.annotations.isEmpty then
                   Left(
-                    ConfigError.other(s"No annotations found for field: $label")
+                    ConfigError.other(label, s"No annotations found for field: $label")
                   )
                 else
-                  reader.read(fieldMetadata.annotations) match {
-                    case Right(raw) => decoder.decode(raw)
+                  reader.read(label, fieldMetadata.annotations) match {
+                    case Right(raw) => decoder.decode(raw, DecodingContext(fieldMetadata.annotations, label))
                     case Left(e) if e.onlyContainsMissing =>
                       fieldMetadata.default match {
                         case Some(d) => Right(d)

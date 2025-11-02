@@ -66,12 +66,12 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
       .onProp("protocol", "hTtPs")
 
     given ConfigDecoder[Protocol] = new ConfigDecoder[Protocol]:
-      def decode(raw: String): Either[ConfigError, Protocol] =
+      def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Protocol] =
         val rawLowercased = raw.trim().toLowerCase()
         Protocol.values
           .find(_.toString().toLowerCase() == rawLowercased)
           .toRight(
-            ConfigError.invalid(s"Couldn't find right value for Protocol", raw)
+            ConfigError.invalid(s"Couldn't find right value for Protocol", raw, Some(prop("protocol")))
           )
 
     case class Config(@prop("protocol") protocol: Protocol)
@@ -97,7 +97,8 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
     config.left.value should be(
       ConfigError.invalid(
         "couldn't find case for enum Severity (available values: Error, Warning)",
-        "Bad"
+        "Bad",
+        Some(env("SEV"))
       )
     )
   }
