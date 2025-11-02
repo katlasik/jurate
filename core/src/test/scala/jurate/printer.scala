@@ -1,6 +1,7 @@
 package jurate
 
 import jurate.printers.{DefaultPrinter, TablePrinter}
+import jurate.utils.FieldPath.path
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -8,12 +9,12 @@ import org.scalatest.matchers.should.Matchers
 class ErrorPrinterSpec extends AnyFlatSpec with Matchers with EitherValues {
 
   "DefaultPrinter" should "format errors same as getMessage" in {
-    val error = ConfigError.missing("port", Seq(env("PORT")))
+    val error = ConfigError.missing(path"port", Seq(env("PORT")))
     error.print(using DefaultPrinter) shouldEqual error.getMessage
   }
 
   "TablePrinter" should "format single error as table" in {
-    val error = ConfigError.missing("port", Seq(env("PORT")))
+    val error = ConfigError.missing(path"port", Seq(env("PORT")))
     val output = error.print(using TablePrinter)
 
     val expected = """┌───────┬────────────┬─────────────────────────────┐
@@ -27,10 +28,15 @@ class ErrorPrinterSpec extends AnyFlatSpec with Matchers with EitherValues {
   }
 
   it should "format multiple errors with different types" in {
-    val error1 = ConfigError.missing("port", Seq(env("PORT")))
+    val error1 = ConfigError.missing(path"port", Seq(env("PORT")))
     val error2 =
-      ConfigError.invalid("port", "can't decode", "bad", Some(env("TIMEOUT")))
-    val error3 = ConfigError.other("custom", "custom message")
+      ConfigError.invalid(
+        path"port",
+        "can't decode",
+        "bad",
+        Some(env("TIMEOUT"))
+      )
+    val error3 = ConfigError.other(path"custom", "custom message")
     val combined = error1 ++ error2 ++ error3
 
     val output = combined.print(using TablePrinter)
@@ -51,7 +57,7 @@ class ErrorPrinterSpec extends AnyFlatSpec with Matchers with EitherValues {
 
   it should "combine multiple annotations in one row" in {
     val error =
-      ConfigError.missing("database", Seq(env("DB_NAME"), prop("db.name")))
+      ConfigError.missing(path"database", Seq(env("DB_NAME"), prop("db.name")))
     val output = error.print(using TablePrinter)
 
     val expected = """┌──────────┬───────────────────────────────┬─────────────────────────────┐

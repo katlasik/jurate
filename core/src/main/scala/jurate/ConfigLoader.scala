@@ -7,9 +7,12 @@ import scala.deriving.Mirror
 import scala.compiletime.*
 
 trait ConfigLoader[C] {
-  def load(reader: ConfigReader): Either[ConfigError, C] =
+  def load(
+      reader: ConfigReader,
+      parentFieldPath: FieldPath
+  ): Either[ConfigError, C] =
     this match {
-      case ConfigHandler(handle) => handle(reader)
+      case ConfigHandler(handle) => handle(reader, parentFieldPath)
       case _ =>
         throw new UnsupportedOperationException(
           "You should only load config using ConfigHandler!"
@@ -28,7 +31,7 @@ trait ConfigLoader[C] {
 }
 
 final case class ConfigHandler[C](
-    handle: ConfigReader => Either[ConfigError, C]
+    handle: (ConfigReader, FieldPath) => Either[ConfigError, C]
 ) extends ConfigLoader[C]
 
 object ConfigLoader:
@@ -43,24 +46,26 @@ object ConfigLoader:
   private inline def derivedMirrorProduct[T](
       product: Mirror.ProductOf[T]
   ): ConfigLoader[T] =
-    new ConfigHandler[T](reader =>
+    new ConfigHandler[T]((reader, parentFieldPath) =>
       aggregate(
         deriveProduct[
           product.MirroredElemLabels,
           product.MirroredElemTypes
         ](
           fieldMetadata[T],
-          reader
+          reader,
+          parentFieldPath
         )
       ).map(v => product.fromProduct(Tuple.fromArray(v.toArray)))
     )
 
-  inline def deriveProduct[
+  private inline def deriveProduct[
       Labels <: Tuple,
       Params <: Tuple
   ](
       metadata: Map[String, FieldMetadata],
-      reader: ConfigReader
+      reader: ConfigReader,
+      parentFieldPath: FieldPath
   ): List[Either[ConfigError, Any]] =
     inline erasedValue[(Labels, Params)] match
       case _: (EmptyTuple, EmptyTuple) =>
@@ -69,6 +74,8 @@ object ConfigLoader:
         val label = constValue[l].asInstanceOf[String]
         val fieldMetadata = metadata(label)
 
+        val fieldPath = parentFieldPath / label
+
         val value = summonFrom {
           case loader: ConfigLoader[`p`] =>
             loader match {
@@ -76,14 +83,17 @@ object ConfigLoader:
                 if fieldMetadata.annotations.isEmpty then
                   Left(
                     ConfigError
-                      .other(label, s"No annotations found for field: $label")
+                      .other(
+                        fieldPath,
+                        s"No annotations found for field: $label"
+                      )
                   )
                 else
-                  reader.read(label, fieldMetadata.annotations) match {
+                  reader.read(fieldPath, fieldMetadata.annotations) match {
                     case Right(raw) =>
                       decoder.decode(
                         raw,
-                        DecodingContext(fieldMetadata.annotations, label)
+                        DecodingContext(fieldMetadata.annotations, fieldPath)
                       )
                     case Left(e) if e.onlyContainsMissing =>
                       fieldMetadata.default match {
@@ -99,7 +109,7 @@ object ConfigLoader:
                     case Left(e) => Left(e)
                   }
               case handler: ConfigHandler[_] =>
-                handler.load(reader) match {
+                handler.load(reader, fieldPath) match {
                   case Right(v) => Right(v)
                   case Left(e) if e.onlyContainsMissing =>
                     fieldMetadata.default match {
@@ -118,14 +128,15 @@ object ConfigLoader:
           case _ => decoderError[p]
         }
 
-        value :: deriveProduct[ltail, ptail](metadata, reader)
+        value :: deriveProduct[ltail, ptail](metadata, reader, parentFieldPath)
 
-  inline def deriveSum[
+  private inline def deriveSum[
       T,
       Subtypes <: Tuple,
       SuperTypeLabel <: String
   ](
       reader: ConfigReader,
+      fieldPath: FieldPath,
       nestedReasons: List[ConfigErrorReason] = Nil
   ): Either[ConfigError, T] =
 
@@ -140,14 +151,16 @@ object ConfigLoader:
               nestedSum.MirroredElemTypes,
               nestedSum.MirroredLabel
             ](
-              reader
+              reader,
+              fieldPath
             ).map(_.asInstanceOf[T])
           case loader: ConfigLoader[`subtype`] =>
-            loader.load(reader).map(_.asInstanceOf[T]) match {
+            loader.load(reader, fieldPath).map(_.asInstanceOf[T]) match {
               case Right(r) => Right(r)
               case Left(e) if e.onlyContainsMissing =>
                 deriveSum[T, tail, SuperTypeLabel](
                   reader,
+                  fieldPath,
                   nestedReasons ++ e.reasons
                 )
               case Left(value) => Left(value)
@@ -159,7 +172,8 @@ object ConfigLoader:
                 product.MirroredElemTypes
               ](
                 fieldMetadata[subtype],
-                reader
+                reader,
+                fieldPath
               )
             ).map(v =>
               product.fromProduct(Tuple.fromArray(v.toArray)).asInstanceOf[T]
@@ -170,6 +184,7 @@ object ConfigLoader:
               case Left(e) if e.onlyContainsMissing =>
                 deriveSum[T, tail, SuperTypeLabel](
                   reader,
+                  fieldPath,
                   nestedReasons ++ e.reasons
                 )
               case Left(value) => Left(value)
@@ -186,6 +201,9 @@ object ConfigLoader:
 
       new EnumConfigDecoder(cases, name)
     else
-      new ConfigHandler[T](reader =>
-        deriveSum[T, sum.MirroredElemTypes, sum.MirroredLabel](reader)
+      new ConfigHandler[T]((reader, parentFieldPath) =>
+        deriveSum[T, sum.MirroredElemTypes, sum.MirroredLabel](
+          reader,
+          parentFieldPath
+        )
       )

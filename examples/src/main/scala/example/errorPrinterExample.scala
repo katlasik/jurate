@@ -10,18 +10,17 @@ object ErrorPrinterExample extends App {
       dbConfig: DatabaseConfig
   )
 
-  case class DatabaseConfig(
-      @env("DB_HOST") host: String,
-      @env("DB_PORT") port: Int,
-      @env("DB_NAME") @prop("db.name") database: String,
+  case class DbCredentials(
       @env("DB_USER") username: String,
       @env("DB_PASS") password: Secret[String]
   )
 
-  println("=" * 80)
-  println("ConfigError Printer Example")
-  println("=" * 80)
-  println()
+  case class DatabaseConfig(
+      @env("DB_HOST") host: String,
+      @env("DB_PORT") port: Int,
+      @env("DB_NAME") @prop("db.name") database: String,
+      credentials: DbCredentials
+  )
 
   val result = load[AppConfig]
 
@@ -31,7 +30,7 @@ object ErrorPrinterExample extends App {
       println(config)
 
     case Left(error) =>
-      println("❌ Configuration loading failed\n")
+      println("Configuration loading failed:\n")
       println(error.print(using TablePrinter))
       println()
   }

@@ -13,24 +13,24 @@ object TablePrinter extends ErrorPrinter {
   }
 
   private def reasonToRow(reason: ConfigErrorReason): TableRow = reason match {
-    case Missing(fieldName, annotations) =>
+    case Missing(fieldPath, annotations) =>
       TableRow(
-        field = fieldName,
+        field = fieldPath.dottedPath,
         source = formatAnnotations(annotations),
         message = "Missing configuration value"
       )
 
-    case Invalid(receivedValue, detail, fieldNameOpt, annotationOpt) =>
+    case Invalid(receivedValue, detail, fieldPath, annotationOpt) =>
       TableRow(
-        field = fieldNameOpt.getOrElse(""),
+        field = fieldPath.dottedPath,
         source =
           annotationOpt.map(ann => formatAnnotations(Seq(ann))).getOrElse(""),
         message = s"Invalid value: $detail, received: '$receivedValue'"
       )
 
-    case Other(fieldName, detail, annotationOpt) =>
+    case Other(fieldPath, detail, annotationOpt) =>
       TableRow(
-        field = fieldName,
+        field = fieldPath.dottedPath,
         source =
           annotationOpt.map(ann => formatAnnotations(Seq(ann))).getOrElse(""),
         message = detail
@@ -63,30 +63,33 @@ object TablePrinter extends ErrorPrinter {
     }
 
   private def calculateColumnWidths(rows: List[TableRow]): ColumnWidths = {
-    val headers = List("Field", "Source", "Message")
-    val maxFieldWidth = 25
-    val maxSourceWidth = 50
-    val maxMessageWidth = 80
+    val FieldHeader = "Field"
+    val SourceHeader = "Source"
+    val MessageHeader = "Message"
+
+    val maxFieldWidth = 60
+    val maxSourceWidth = 80
+    val maxMessageWidth = 150
 
     ColumnWidths(
       field = math.min(
         maxFieldWidth,
         math.max(
-          headers(0).length,
+          FieldHeader.length,
           rows.map(_.field.length).maxOption.getOrElse(0)
         )
       ),
       source = math.min(
         maxSourceWidth,
         math.max(
-          headers(1).length,
+          SourceHeader.length,
           rows.map(_.source.length).maxOption.getOrElse(0)
         )
       ),
       message = math.min(
         maxMessageWidth,
         math.max(
-          headers(2).length,
+          MessageHeader.length,
           rows.map(_.message.length).maxOption.getOrElse(0)
         )
       )

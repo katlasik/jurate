@@ -1,6 +1,6 @@
 package jurate
 
-import jurate.utils.aggregate
+import jurate.utils.{FieldPath, aggregate}
 
 import java.io.File
 import java.net.{InetAddress, URI, UnknownHostException}
@@ -21,7 +21,9 @@ given [T: ConfigLoader] => ConfigLoader[Option[T]] =
           decoder.decode(raw, ctx).map(Some(_))
       }
     case handler: ConfigHandler[_] =>
-      new ConfigHandler[Option[T]](reader => handler.load(reader).map(Some(_)))
+      new ConfigHandler[Option[T]]((reader, parentFieldPath) =>
+        handler.load(reader, parentFieldPath).map(Some(_))
+      )
   }
 
 given [T, C[T] <: Seq[T]](using
@@ -54,7 +56,7 @@ given ConfigDecoder[Short] with {
     case _: NumberFormatException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           "can't decode short value",
           raw,
           ctx.annotations.headOption
@@ -71,7 +73,7 @@ given ConfigDecoder[Int] with {
     case _: NumberFormatException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           s"can't decode integer",
           raw,
           ctx.annotations.headOption
@@ -88,7 +90,7 @@ given ConfigDecoder[Long] with {
     case _: NumberFormatException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           s"can't decode long",
           raw,
           ctx.annotations.headOption
@@ -105,7 +107,7 @@ given ConfigDecoder[Float] with {
     case _: NumberFormatException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           s"can't decode double value",
           raw,
           ctx.annotations.headOption
@@ -122,7 +124,7 @@ given ConfigDecoder[Double] with {
     case _: NumberFormatException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           s"can't decode double value",
           raw,
           ctx.annotations.headOption
@@ -139,7 +141,7 @@ given ConfigDecoder[BigDecimal] with {
     case _: NumberFormatException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           s"can't decode BigDecimal value",
           raw,
           ctx.annotations.headOption
@@ -156,7 +158,7 @@ given ConfigDecoder[BigInt] with {
     case _: NumberFormatException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           s"can't decode BigInt value",
           raw,
           ctx.annotations.headOption
@@ -173,7 +175,7 @@ given ConfigDecoder[InetAddress] with {
     case e: UnknownHostException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           s"can't decode InetAddress value: ${e.getMessage}",
           raw,
           ctx.annotations.headOption
@@ -190,7 +192,7 @@ given ConfigDecoder[UUID] with {
     case e: IllegalArgumentException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           s"can't decode UUID value: ${e.getMessage}",
           raw,
           ctx.annotations.headOption
@@ -207,7 +209,7 @@ given ConfigDecoder[Path] with {
     case e: InvalidPathException =>
       Left(
         ConfigError.invalid(
-          ctx.fieldName,
+          ctx.fieldPath,
           s"can't decode Path value: ${e.getMessage}",
           raw,
           ctx.annotations.headOption
@@ -235,7 +237,7 @@ given ConfigDecoder[Boolean] with {
       case _ =>
         Left(
           ConfigError.invalid(
-            ctx.fieldName,
+            ctx.fieldPath,
             s"can't decode boolean value",
             raw,
             ctx.annotations.headOption
@@ -253,7 +255,7 @@ given ConfigDecoder[URI] with {
       case e: IllegalArgumentException =>
         Left(
           ConfigError.invalid(
-            ctx.fieldName,
+            ctx.fieldPath,
             s"can't decode URI value: ${e.getMessage}",
             raw,
             ctx.annotations.headOption
@@ -271,7 +273,7 @@ given ConfigDecoder[Duration] with {
       case e: NumberFormatException =>
         Left(
           ConfigError.invalid(
-            ctx.fieldName,
+            ctx.fieldPath,
             s"can't decode Duration value: ${e.getMessage}",
             raw,
             ctx.annotations.headOption
@@ -284,7 +286,7 @@ given ConfigDecoder[FiniteDuration] = ConfigDecoder[Duration].emap {
   case (_, raw, ctx) =>
     Left(
       ConfigError.invalid(
-        ctx.fieldName,
+        ctx.fieldPath,
         s"expected finite duration but got infinite",
         raw,
         ctx.annotations.headOption
@@ -297,6 +299,6 @@ def load[C](using
       "Can't find required givens. Did you forget to use derives for your case classes?"
     ) loader: ConfigLoader[C],
     reader: ConfigReader
-): Either[ConfigError, C] = loader.load(reader)
+): Either[ConfigError, C] = loader.load(reader, FieldPath.blank)
 
 given ConfigReader = LiveConfigReader

@@ -1,5 +1,7 @@
 package jurate
 
+import jurate.utils.FieldPath
+
 trait ConfigDecoder[C] extends ConfigLoader[C]:
   def decode(raw: String, ctx: DecodingContext): Either[ConfigError, C]
 
@@ -15,5 +17,5 @@ object ConfigDecoder:
 
 case class DecodingContext(
     annotations: Seq[ConfigAnnotation],
-    fieldName: String
+    fieldPath: FieldPath
 )

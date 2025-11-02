@@ -1,5 +1,6 @@
 package jurate
 
+import jurate.utils.FieldPath.path
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.EitherValues
@@ -41,7 +42,10 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // then
     config.left.value should be(
-      ConfigError.missing("host", IArray(env("HOST"), prop("http.host")))
+      ConfigError.missing(
+        path"httpConfig.host",
+        IArray(env("HOST"), prop("http.host"))
+      )
     )
   }
 
@@ -119,7 +123,7 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
     // then
     config.left.value should be(
       ConfigError.invalid(
-        "port",
+        path"httpConfig.port",
         "can't decode integer",
         "Bad",
         Some(env("PORT"))

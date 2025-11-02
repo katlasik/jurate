@@ -1,5 +1,6 @@
 package jurate
 
+import jurate.utils.FieldPath
 import jurate.{*, given}
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AnyFlatSpec
@@ -67,7 +68,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     // then
     config.left.value should be(
       ConfigError.invalid(
-        "port",
+        FieldPath("port"),
         "can't decode integer",
         "bad",
         Some(env("PORT"))
@@ -94,7 +95,9 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     val config = load[Config]
 
     // then
-    config.left.value should be(ConfigError.missing("port", List(env("PORT"))))
+    config.left.value should be(
+      ConfigError.missing(FieldPath("port"), List(env("PORT")))
+    )
   }
 
   it should "load config class with secret" in {

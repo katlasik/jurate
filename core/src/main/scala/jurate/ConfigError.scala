@@ -1,10 +1,12 @@
 package jurate
 
+import jurate.utils.FieldPath
+
 sealed trait ConfigErrorReason {
   def missing: Boolean
 }
 
-case class Missing(fieldName: String, annotations: Seq[ConfigAnnotation])
+case class Missing(fieldPath: FieldPath, annotations: Seq[ConfigAnnotation])
     extends ConfigErrorReason {
   override def missing: Boolean = true
 }
@@ -12,14 +14,14 @@ case class Missing(fieldName: String, annotations: Seq[ConfigAnnotation])
 case class Invalid(
     receivedValue: String,
     detail: String,
-    fieldName: Option[String],
+    fieldPath: FieldPath,
     annotation: Option[ConfigAnnotation]
 ) extends ConfigErrorReason {
   override def missing: Boolean = false
 }
 
 case class Other(
-    fieldName: String,
+    fieldPath: FieldPath,
     detail: String,
     annotation: Option[ConfigAnnotation] = None
 ) extends ConfigErrorReason {
@@ -75,14 +77,14 @@ object ConfigError {
   }
 
   def invalid(
-      fieldName: String,
+      fieldPath: FieldPath,
       detail: String,
       receivedValue: String,
       annotation: Option[ConfigAnnotation]
   ): ConfigError =
     ConfigError(
       Invalid(
-        fieldName = Some(fieldName),
+        fieldPath = fieldPath,
         receivedValue = receivedValue,
         detail = detail,
         annotation = annotation
@@ -90,14 +92,14 @@ object ConfigError {
     )
 
   def missing(
-      fieldName: String,
+      fieldPath: FieldPath,
       annotations: Seq[ConfigAnnotation]
   ): ConfigError =
     ConfigError(
-      Missing(fieldName: String, annotations = annotations) :: Nil
+      Missing(fieldPath, annotations = annotations) :: Nil
     )
 
-  def other(fieldName: String, detail: String): ConfigError = ConfigError(
-    Other(fieldName, detail) :: Nil
+  def other(fieldPath: FieldPath, detail: String): ConfigError = ConfigError(
+    Other(fieldPath, detail) :: Nil
   )
 }
