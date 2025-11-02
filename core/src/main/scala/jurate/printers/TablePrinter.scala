@@ -23,14 +23,16 @@ object TablePrinter extends ErrorPrinter {
     case Invalid(receivedValue, detail, fieldNameOpt, annotationOpt) =>
       TableRow(
         field = fieldNameOpt.getOrElse(""),
-        source = annotationOpt.map(ann => formatAnnotations(Seq(ann))).getOrElse(""),
+        source =
+          annotationOpt.map(ann => formatAnnotations(Seq(ann))).getOrElse(""),
         message = s"Invalid value: $detail, received: '$receivedValue'"
       )
 
     case Other(fieldName, detail, annotationOpt) =>
       TableRow(
         field = fieldName,
-        source = annotationOpt.map(ann => formatAnnotations(Seq(ann))).getOrElse(""),
+        source =
+          annotationOpt.map(ann => formatAnnotations(Seq(ann))).getOrElse(""),
         message = detail
       )
   }
@@ -67,9 +69,27 @@ object TablePrinter extends ErrorPrinter {
     val maxMessageWidth = 80
 
     ColumnWidths(
-      field = math.min(maxFieldWidth, math.max(headers(0).length, rows.map(_.field.length).maxOption.getOrElse(0))),
-      source = math.min(maxSourceWidth, math.max(headers(1).length, rows.map(_.source.length).maxOption.getOrElse(0))),
-      message = math.min(maxMessageWidth, math.max(headers(2).length, rows.map(_.message.length).maxOption.getOrElse(0)))
+      field = math.min(
+        maxFieldWidth,
+        math.max(
+          headers(0).length,
+          rows.map(_.field.length).maxOption.getOrElse(0)
+        )
+      ),
+      source = math.min(
+        maxSourceWidth,
+        math.max(
+          headers(1).length,
+          rows.map(_.source.length).maxOption.getOrElse(0)
+        )
+      ),
+      message = math.min(
+        maxMessageWidth,
+        math.max(
+          headers(2).length,
+          rows.map(_.message.length).maxOption.getOrElse(0)
+        )
+      )
     )
   }
 
@@ -87,16 +107,34 @@ object TablePrinter extends ErrorPrinter {
     s"│ ${headers(0).padTo(widths.field, ' ')} │ ${headers(1).padTo(widths.source, ' ')} │ ${headers(2).padTo(widths.message, ' ')} │"
   }
 
-  private def createDataRow(field: String, source: String, message: String, widths: ColumnWidths): String =
+  private def createDataRow(
+      field: String,
+      source: String,
+      message: String,
+      widths: ColumnWidths
+  ): String =
     s"│ ${field.take(widths.field).padTo(widths.field, ' ')} │ ${source.take(widths.source).padTo(widths.source, ' ')} │ ${message.padTo(widths.message, ' ')} │"
 
-  private def createWrappedMessageRow(message: String, widths: ColumnWidths): String =
+  private def createWrappedMessageRow(
+      message: String,
+      widths: ColumnWidths
+  ): String =
     s"│ ${" " * widths.field} │ ${" " * widths.source} │ ${message.padTo(widths.message, ' ')} │"
 
-  private def renderRow(row: TableRow, widths: ColumnWidths, isLast: Boolean): List[String] = {
+  private def renderRow(
+      row: TableRow,
+      widths: ColumnWidths,
+      isLast: Boolean
+  ): List[String] = {
     val messageLines = wordWrap(row.message, widths.message)
-    val firstLine = createDataRow(row.field, row.source, messageLines.headOption.getOrElse(""), widths)
-    val wrappedLines = messageLines.drop(1).map(line => createWrappedMessageRow(line, widths))
+    val firstLine = createDataRow(
+      row.field,
+      row.source,
+      messageLines.headOption.getOrElse(""),
+      widths
+    )
+    val wrappedLines =
+      messageLines.drop(1).map(line => createWrappedMessageRow(line, widths))
     val separator = if (isLast) Nil else List(createSeparator(widths))
 
     firstLine :: wrappedLines ::: separator

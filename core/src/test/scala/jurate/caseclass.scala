@@ -118,7 +118,12 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // then
     config.left.value should be(
-      ConfigError.invalid("port", "can't decode integer", "Bad", Some(env("PORT")))
+      ConfigError.invalid(
+        "port",
+        "can't decode integer",
+        "Bad",
+        Some(env("PORT"))
+      )
     )
   }
 

@@ -8,7 +8,7 @@ object ErrorPrinterExample extends App {
   case class AppConfig(
       @env("APP_NAME") appName: String,
       dbConfig: DatabaseConfig
-   )
+  )
 
   case class DatabaseConfig(
       @env("DB_HOST") host: String,
