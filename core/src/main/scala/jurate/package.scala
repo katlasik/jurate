@@ -44,7 +44,7 @@ given ConfigDecoder[Short] with {
     Right(raw.toShort)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid("can't decode short value", raw, ctx.annotations.headOption))
+      Left(ConfigError.invalid(ctx.fieldName, "can't decode short value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[Int] with {
@@ -52,7 +52,7 @@ given ConfigDecoder[Int] with {
     Right(raw.toInt)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode integer", raw, ctx.annotations.headOption))
+      Left(ConfigError.invalid(ctx.fieldName, s"can't decode integer", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[Long] with {
@@ -60,7 +60,7 @@ given ConfigDecoder[Long] with {
     Right(raw.toLong)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode long", raw, ctx.annotations.headOption))
+      Left(ConfigError.invalid(ctx.fieldName, s"can't decode long", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[Float] with {
@@ -68,7 +68,7 @@ given ConfigDecoder[Float] with {
     Right(raw.toFloat)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode double value", raw, ctx.annotations.headOption))
+      Left(ConfigError.invalid(ctx.fieldName, s"can't decode double value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[Double] with {
@@ -76,7 +76,7 @@ given ConfigDecoder[Double] with {
     Right(raw.toDouble)
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode double value", raw, ctx.annotations.headOption))
+      Left(ConfigError.invalid(ctx.fieldName, s"can't decode double value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[BigDecimal] with {
@@ -84,7 +84,7 @@ given ConfigDecoder[BigDecimal] with {
     Right(BigDecimal(raw))
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode BigDecimal value", raw, ctx.annotations.headOption))
+      Left(ConfigError.invalid(ctx.fieldName, s"can't decode BigDecimal value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[BigInt] with {
@@ -92,7 +92,7 @@ given ConfigDecoder[BigInt] with {
     Right(BigInt(raw))
   catch
     case _: NumberFormatException =>
-      Left(ConfigError.invalid(s"can't decode BigInt value", raw, ctx.annotations.headOption))
+      Left(ConfigError.invalid(ctx.fieldName, s"can't decode BigInt value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[InetAddress] with {
@@ -102,6 +102,7 @@ given ConfigDecoder[InetAddress] with {
     case e: UnknownHostException =>
       Left(
         ConfigError.invalid(
+          ctx.fieldName, 
           s"can't decode InetAddress value: ${e.getMessage}",
           raw,
           ctx.annotations.headOption
@@ -115,7 +116,7 @@ given ConfigDecoder[UUID] with {
   catch
     case e: IllegalArgumentException =>
       Left(
-        ConfigError.invalid(s"can't decode UUID value: ${e.getMessage}", raw, ctx.annotations.headOption)
+        ConfigError.invalid(ctx.fieldName, s"can't decode UUID value: ${e.getMessage}", raw, ctx.annotations.headOption)
       )
 }
 
@@ -125,7 +126,7 @@ given ConfigDecoder[Path] with {
   catch
     case e: InvalidPathException =>
       Left(
-        ConfigError.invalid(s"can't decode Path value: ${e.getMessage}", raw, ctx.annotations.headOption)
+        ConfigError.invalid(ctx.fieldName, s"can't decode Path value: ${e.getMessage}", raw, ctx.annotations.headOption)
       )
 }
 
@@ -140,7 +141,7 @@ given ConfigDecoder[Boolean] with {
     raw.toLowerCase match
       case "true" | "yes" | "1" => Right(true)
       case "false" | "no" | "0" => Right(false)
-      case _ => Left(ConfigError.invalid(s"can't decode boolean value", raw, ctx.annotations.headOption))
+      case _ => Left(ConfigError.invalid(ctx.fieldName, s"can't decode boolean value", raw, ctx.annotations.headOption))
 }
 
 given ConfigDecoder[URI] with {
@@ -149,7 +150,7 @@ given ConfigDecoder[URI] with {
     catch
       case e: IllegalArgumentException =>
         Left(
-          ConfigError.invalid(s"can't decode URI value: ${e.getMessage}", raw, ctx.annotations.headOption)
+          ConfigError.invalid(ctx.fieldName, s"can't decode URI value: ${e.getMessage}", raw, ctx.annotations.headOption)
         )
 }
 
@@ -160,6 +161,7 @@ given ConfigDecoder[Duration] with {
       case e: NumberFormatException =>
         Left(
           ConfigError.invalid(
+            ctx.fieldName,
             s"can't decode Duration value: ${e.getMessage}",
             raw, 
             ctx.annotations.headOption
@@ -170,7 +172,7 @@ given ConfigDecoder[Duration] with {
 given ConfigDecoder[FiniteDuration] = ConfigDecoder[Duration].emap {
   case (fd: FiniteDuration, _, _) => Right(fd)
   case (_, raw, ctx) =>
-    Left(ConfigError.invalid(s"expected finite duration but got infinite", raw, ctx.annotations.headOption))
+    Left(ConfigError.invalid(ctx.fieldName, s"expected finite duration but got infinite", raw, ctx.annotations.headOption))
 }
 
 def load[C](using

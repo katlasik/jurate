@@ -11,6 +11,7 @@ private[jurate] final class EnumConfigDecoder[C](
       .find(_.toString() == raw)
       .toRight(
         ConfigError.invalid(
+          ctx.fieldName,
           s"couldn't find case for enum $enumName (available values: ${values.mkString(", ")})",
           raw,
           ctx.annotations.headOption

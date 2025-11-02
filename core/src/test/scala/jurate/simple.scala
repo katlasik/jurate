@@ -66,7 +66,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // then
     config.left.value should be(
-      ConfigError.invalid("can't decode integer", "bad", Some(env("PORT")))
+      ConfigError.invalid("port", "can't decode integer", "bad", Some(env("PORT")))
     )
   }
 

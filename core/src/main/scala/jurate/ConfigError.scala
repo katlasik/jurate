@@ -25,14 +25,16 @@ case class Other(fieldName: String, detail: String, annotation: Option[ConfigAnn
 case class ConfigError(reasons: List[ConfigErrorReason])
     extends Exception(ConfigError.createErrorMessage(reasons)) {
 
-
   infix def ++(other: ConfigError): ConfigError = {
     ConfigError(reasons ++ other.reasons)
   }
 
+  // Does this error only contain missing value errors? - in this case we can succeed if field is optional
   private[jurate] def onlyContainsMissing: Boolean = {
     reasons.forall(_.missing)
   }
+
+  def print(using printer: ErrorPrinter): String = printer.format(this)
 
 }
 
@@ -67,10 +69,10 @@ object ConfigError {
       .mkString("\n", "\n", "")
   }
 
-  def invalid(detail: String, receivedValue: String, annotation: Option[ConfigAnnotation]): ConfigError =
+  def invalid(fieldName: String, detail: String, receivedValue: String, annotation: Option[ConfigAnnotation]): ConfigError =
     ConfigError(
       Invalid(
-        fieldName = None,
+        fieldName = Some(fieldName),
         receivedValue = receivedValue,
         detail = detail,
         annotation = annotation
