@@ -176,6 +176,72 @@ load[DbConfig] // Right(DbConfig("localhost", "mypass"))
 
 ```
 
+# Error Handling
+
+Configuration loading returns an `Either[ConfigError, Config]`. When errors occur, you can format them for display using different printers.
+
+## Default Error Format
+
+By default, errors use `getMessage` which provides a text-based error list:
+
+```scala
+case class Config(
+  @env("PORT") port: Int,
+  @env("HOST") host: String
+)
+
+load[Config] match {
+  case Left(error) =>
+    println(error.getMessage)
+    // Configuration loading failed with following issues:
+    // Missing environment variable PORT
+    // Missing environment variable HOST
+  case Right(config) => // ...
+}
+```
+
+## Table Format
+
+For better readability, use `TablePrinter` to display errors in a formatted table:
+
+```scala
+import jurate.printers.TablePrinter
+
+load[Config] match {
+  case Left(error) =>
+    System.err.println(error.print(using TablePrinter))
+    // ┌───────┬────────────┬─────────────────────────────┐
+    // │ Field │ Source     │ Message                     │
+    // ├───────┼────────────┼─────────────────────────────┤
+    // │ port  │ PORT (env) │ Missing configuration value │
+    // ├───────┼────────────┼─────────────────────────────┤
+    // │ host  │ HOST (env) │ Missing configuration value │
+    // └───────┴────────────┴─────────────────────────────┘
+  case Right(config) => // ...
+}
+```
+
+## Custom Error Printers
+
+You can create custom error formatters by implementing the `ErrorPrinter` trait:
+
+```scala
+import jurate.printers.ErrorPrinter
+
+object CompactPrinter extends ErrorPrinter {
+  def format(error: ConfigError): String =
+    error.reasons.map {
+      case Missing(field, _) => s"Missing: $field"
+      case Invalid(_, detail, _, _) => s"Invalid: $detail"
+      case Other(field, detail, _) => s"Error: $detail"
+    }.mkString(" | ")
+}
+
+// Usage
+error.print(using CompactPrinter)
+// Output: Missing: port | Missing: host
+```
+
 # Examples
 You can find more examples under [src/examples](./src/examples/scala). 
 You can run them using `sbt "examples/runMain <example-class>"` command (set necessary environment variables first). For instance:

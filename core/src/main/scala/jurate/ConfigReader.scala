@@ -1,16 +1,19 @@
 package jurate
 
+import jurate.utils.FieldPath
+
 trait ConfigReader {
   def readEnv(name: String): Option[String]
   def readProp(name: String): Option[String]
 
   private[jurate] def read(
+      fieldPath: FieldPath,
       annotations: Seq[ConfigAnnotation]
   ): Either[ConfigError, String] = {
 
     def iterate(values: Seq[ConfigAnnotation]): Either[ConfigError, String] =
 
-      if values.isEmpty then Left(ConfigError.missing(annotations))
+      if values.isEmpty then Left(ConfigError.missing(fieldPath, annotations))
       else
         val maybeValue = values.head match
           case env(name) =>

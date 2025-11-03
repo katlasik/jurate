@@ -1,5 +1,6 @@
 package jurate
 
+import jurate.utils.FieldPath
 import jurate.{*, given}
 import org.scalatest.EitherValues
 import org.scalatest.flatspec.AnyFlatSpec
@@ -66,7 +67,12 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // then
     config.left.value should be(
-      ConfigError.invalid("can't decode integer", "bad")
+      ConfigError.invalid(
+        FieldPath("port"),
+        "can't decode integer",
+        "bad",
+        Some(env("PORT"))
+      )
     )
   }
 
@@ -89,7 +95,9 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
     val config = load[Config]
 
     // then
-    config.left.value should be(ConfigError.missing(List(env("PORT"))))
+    config.left.value should be(
+      ConfigError.missing(FieldPath("port"), List(env("PORT")))
+    )
   }
 
   it should "load config class with secret" in {
@@ -143,7 +151,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // then
     config.left.value.getMessage.lines.toList should contain allOf (
-      "Loaded invalid value: can't decode integer, received value: 'bad'",
+      "Invalid value received while reading environment variable PORT: can't decode integer, received value: 'bad'",
       "Missing environment variable HOST, missing system property sys.host",
       "Missing environment variable SECRET"
     )
