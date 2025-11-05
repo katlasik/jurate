@@ -2,7 +2,7 @@ package jurate
 
 import scala.annotation.StaticAnnotation
 
-private[jurate] sealed trait ConfigAnnotation extends StaticAnnotation
+private[jurate] sealed abstract class ConfigAnnotation extends StaticAnnotation
 
 /**
  * Annotation to load configuration from an environment variable.

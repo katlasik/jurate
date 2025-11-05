@@ -2,6 +2,8 @@ package jurate
 
 import jurate.utils.FieldPath
 
+import scala.annotation.tailrec
+
 /** Abstraction for reading configuration from environment variables and system properties.
   *
   * ConfigReader provides methods to read from different configuration sources.
@@ -22,18 +24,22 @@ trait ConfigReader {
     */
   def readProp(name: String): Option[String]
 
+  /** Attempts to read configuration from annotations in left-to-right order,
+   * returning the first successful read. This enables fallback patterns like:
+   * @env("PRIMARY") @env("FALLBACK") @prop("default.value")
+   */
   private[jurate] def read(
       fieldPath: FieldPath,
       annotations: Seq[ConfigAnnotation]
   ): Either[ConfigError, String] = {
 
+    @tailrec
     def iterate(values: Seq[ConfigAnnotation]): Either[ConfigError, String] =
 
       if values.isEmpty then Left(ConfigError.missing(fieldPath, annotations))
       else
         val maybeValue = values.head match
-          case env(name) =>
-            readEnv(name)
+          case env(name) => readEnv(name)
           case prop(name) => readProp(name)
 
         maybeValue match

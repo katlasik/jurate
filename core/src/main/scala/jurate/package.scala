@@ -108,7 +108,7 @@ given ConfigDecoder[Float] with {
       Left(
         ConfigError.invalid(
           ctx.fieldPath,
-          s"can't decode double value",
+          s"can't decode float value",
           raw,
           ctx.annotations.headOption
         )
@@ -319,6 +319,11 @@ def load[C](using
       "Can't find required givens. Did you forget to use derives for your case classes?"
     ) loader: ConfigLoader[C],
     reader: ConfigReader
-): Either[ConfigError, C] = loader.load(reader, FieldPath.blank)
+): Either[ConfigError, C] = loader.load(reader, FieldPath.root)
 
+/** Default ConfigReader that reads from system environment variables and properties.
+ * This instance is automatically available when you import jurate.{*, given}.
+ *
+ * For testing, use ConfigReader.mocked to provide custom values.
+ */
 given ConfigReader = LiveConfigReader

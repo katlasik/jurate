@@ -73,13 +73,20 @@ object ConfigLoader:
   def apply[C](using value: ConfigLoader[C]): ConfigLoader[C] = value
 
   /** Automatically derives a ConfigLoader for types with a Mirror.
-    *
     * This method uses Scala 3 compile-time reflection to automatically derive
     * ConfigLoader instances for case classes (products) and sealed traits (sums).
+    * Example:
+    * {{{
+    * case class DbConfig(
+    *   @env("DB_HOST") host: String,
+    *   @env("DB_PORT") port: Int
+    * ) derives ConfigLoader
+    * }}}
     *
     * @tparam A the type to derive a ConfigLoader for
     * @param mirror the Mirror for type A
     * @return a derived ConfigLoader instance
+    *
     */
   inline given derived[A](using mirror: Mirror.Of[A]): ConfigLoader[A] =
     inline mirror match

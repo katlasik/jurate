@@ -10,6 +10,10 @@ import jurate.*
   */
 object TablePrinter extends ErrorPrinter {
 
+  private val FieldHeader = "Field"
+  private val SourceHeader = "Source"
+  private val MessageHeader = "Message"
+  
   private case class TableRow(field: String, source: String, message: String)
   private case class ColumnWidths(field: Int, source: Int, message: Int)
 
@@ -74,31 +78,28 @@ object TablePrinter extends ErrorPrinter {
     }
 
   private def calculateColumnWidths(rows: List[TableRow]): ColumnWidths = {
-    val FieldHeader = "Field"
-    val SourceHeader = "Source"
-    val MessageHeader = "Message"
-
-    val maxFieldWidth = 60
-    val maxSourceWidth = 80
-    val maxMessageWidth = 150
+    
+    val MaxFieldWidth = 60
+    val MaxSourceWidth = 80
+    val MaxMessageWidth = 150
 
     ColumnWidths(
       field = math.min(
-        maxFieldWidth,
+        MaxFieldWidth,
         math.max(
           FieldHeader.length,
           rows.map(_.field.length).maxOption.getOrElse(0)
         )
       ),
       source = math.min(
-        maxSourceWidth,
+        MaxSourceWidth,
         math.max(
           SourceHeader.length,
           rows.map(_.source.length).maxOption.getOrElse(0)
         )
       ),
       message = math.min(
-        maxMessageWidth,
+        MaxMessageWidth,
         math.max(
           MessageHeader.length,
           rows.map(_.message.length).maxOption.getOrElse(0)
@@ -117,8 +118,7 @@ object TablePrinter extends ErrorPrinter {
     s"└─${"─" * widths.field}─┴─${"─" * widths.source}─┴─${"─" * widths.message}─┘"
 
   private def createHeaderRow(widths: ColumnWidths): String = {
-    val headers = List("Field", "Source", "Message")
-    s"│ ${headers(0).padTo(widths.field, ' ')} │ ${headers(1).padTo(widths.source, ' ')} │ ${headers(2).padTo(widths.message, ' ')} │"
+    s"│ ${FieldHeader.padTo(widths.field, ' ')} │ ${SourceHeader.padTo(widths.source, ' ')} │ ${MessageHeader.padTo(widths.message, ' ')} │"
   }
 
   private def createDataRow(

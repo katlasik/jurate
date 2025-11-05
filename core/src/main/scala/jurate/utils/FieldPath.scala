@@ -13,7 +13,10 @@ case class FieldPath(values: List[String]) {
     * @param value the path segment to append
     * @return a new FieldPath with the appended segment
     */
-  def /(value: String): FieldPath = FieldPath(values :+ value)
+  def /(value: String): FieldPath = {
+    assert(value.trim.nonEmpty)
+    FieldPath(values :+ value)
+  }
 
   /** Converts the path to a dot-separated string.
     *
@@ -28,7 +31,7 @@ object FieldPath {
     *
     * @return an empty FieldPath
     */
-  def blank: FieldPath = FieldPath(Nil)
+  def root: FieldPath = FieldPath(Nil)
 
   /** Creates a FieldPath from a varargs list of segments.
     *
