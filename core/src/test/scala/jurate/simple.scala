@@ -113,7 +113,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
 
     // then
     config.value should be(Config(Secret("qwerty")))
-    config.value.toString should be("Config(*****)")
+    config.value.toString should be("Config(Secret(65e84be335))")
 
   }
 

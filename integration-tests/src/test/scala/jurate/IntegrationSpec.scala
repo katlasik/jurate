@@ -30,7 +30,7 @@ class IntegrationSpec extends AnyFlatSpec with Matchers with EitherValues {
     result.exitValue() should be(0)
 
     logger.getOutput should include(
-      "Config(5432,myhost.priv,DbConfig(localhost,5432,user,*****))"
+      "Config(5432,myhost.priv,DbConfig(localhost,5432,user,Secret(d74ff0ee8d)))"
     )
 
   }
@@ -64,7 +64,7 @@ class IntegrationSpec extends AnyFlatSpec with Matchers with EitherValues {
     result.exitValue() should be(0)
 
     logger.getOutput should include(
-      "Config(5432,myhost.priv,DbConfig(localhost,5432,user,*****))"
+      "Config(5432,myhost.priv,DbConfig(localhost,5432,user,Secret(d74ff0ee8d)))"
     )
 
   }
