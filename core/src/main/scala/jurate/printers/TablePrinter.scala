@@ -2,11 +2,22 @@ package jurate.printers
 
 import jurate.*
 
+/** An error printer that formats configuration errors as ASCII tables.
+  *
+  * This printer creates well-formatted tables with columns for field names, sources
+  * (environment variables or system properties), and error messages. It includes
+  * word wrapping and column width management for readable output.
+  */
 object TablePrinter extends ErrorPrinter {
 
   private case class TableRow(field: String, source: String, message: String)
   private case class ColumnWidths(field: Int, source: Int, message: Int)
 
+  /** Formats a configuration error as an ASCII table.
+    *
+    * @param error the configuration error to format
+    * @return a formatted table string showing all error reasons
+    */
   override def format(error: ConfigError): String = {
     val rows = error.reasons.map(reasonToRow)
     renderTable(rows)

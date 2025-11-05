@@ -294,6 +294,26 @@ given ConfigDecoder[FiniteDuration] = ConfigDecoder[Duration].emap {
     )
 }
 
+/** Loads configuration into a case class instance.
+  *
+  * This is the main entry point for loading configuration. It requires a ConfigLoader
+  * instance (typically auto-derived) and a ConfigReader (typically the live reader).
+  *
+  * Example:
+  * {{{
+  * case class DatabaseConfig(
+  *   @env("DB_HOST") host: String,
+  *   @env("DB_PORT") port: Int
+  * ) derives ConfigLoader
+  *
+  * val config: Either[ConfigError, DatabaseConfig] = load[DatabaseConfig]
+  * }}}
+  *
+  * @tparam C the configuration type to load
+  * @param loader the ConfigLoader instance, typically auto-derived
+  * @param reader the ConfigReader to use for reading configuration sources
+  * @return Either a ConfigError or the loaded configuration instance
+  */
 def load[C](using
     @implicitNotFound(
       "Can't find required givens. Did you forget to use derives for your case classes?"
