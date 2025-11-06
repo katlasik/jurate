@@ -14,6 +14,6 @@ private[jurate] final class EnumConfigDecoder[C](
           ctx.fieldPath,
           s"couldn't find case for enum $enumName (available values: ${values.mkString(", ")})",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )

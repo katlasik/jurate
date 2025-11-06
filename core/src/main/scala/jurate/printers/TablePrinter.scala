@@ -35,11 +35,10 @@ object TablePrinter extends ErrorPrinter {
         message = "Missing configuration value"
       )
 
-    case Invalid(receivedValue, detail, fieldPath, annotationOpt) =>
+    case Invalid(receivedValue, detail, fieldPath, annotation) =>
       TableRow(
         field = fieldPath.dottedPath,
-        source =
-          annotationOpt.map(ann => formatAnnotations(Seq(ann))).getOrElse(""),
+        source = formatAnnotations(Seq(annotation)),
         message = s"Invalid value: $detail, received: '$receivedValue'"
       )
 

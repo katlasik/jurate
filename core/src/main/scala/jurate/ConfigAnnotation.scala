@@ -11,6 +11,8 @@ private[jurate] sealed abstract class ConfigAnnotation extends StaticAnnotation
  */
 case class env(name: String) extends ConfigAnnotation
 
+
+
 /**
  * Annotation to load configuration from a system property.
  *

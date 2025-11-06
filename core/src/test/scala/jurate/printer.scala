@@ -34,7 +34,7 @@ class ErrorPrinterSpec extends AnyFlatSpec with Matchers with EitherValues {
         path"port",
         "can't decode",
         "bad",
-        Some(env("TIMEOUT"))
+        env("TIMEOUT")
       )
     val error3 = ConfigError.other(path"custom", "custom message")
     val combined = error1 ++ error2 ++ error3

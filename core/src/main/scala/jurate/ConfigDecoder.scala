@@ -51,9 +51,11 @@ object ConfigDecoder:
  * Context information available during decoding.
  *
  * @param annotations the configuration source annotations
+ * @param evaluatedAnnotation the annotation that provided the value
  * @param fieldPath the path to the field being decoded
  */
 case class DecodingContext(
     annotations: Seq[ConfigAnnotation],
+    evaluatedAnnotation: ConfigAnnotation,
     fieldPath: FieldPath
 )

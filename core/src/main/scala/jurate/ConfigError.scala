@@ -35,7 +35,7 @@ case class Invalid(
     receivedValue: String,
     detail: String,
     fieldPath: FieldPath,
-    annotation: Option[ConfigAnnotation]
+    annotation: ConfigAnnotation
 ) extends ConfigErrorReason {
   override def missing: Boolean = false
 }
@@ -45,7 +45,7 @@ case class Invalid(
  *
  * @param fieldPath the path to the field where the error occurred
  * @param detail details about the error
- * @param annotation optional annotation related to the error
+ * @param annotation optionally the annotation related to the error
  */
 case class Other(
     fieldPath: FieldPath,
@@ -108,12 +108,10 @@ object ConfigError {
           createAnnotationMessage(annotations)
         case Invalid(receivedValue, detail, fieldName, annotation) =>
           annotation match {
-            case Some(env(name)) =>
+            case env(name) =>
               s"Invalid value received while reading environment variable $name: $detail, received value: '$receivedValue'"
-            case Some(prop(path)) =>
+            case prop(path) =>
               s"Invalid value received while reading system property $path: $detail, received value: '$receivedValue'"
-            case _ =>
-              s"Invalid value received: $detail, received value: '$receivedValue'"
           }
         case Other(fieldName, detail, annotations) => detail
       }
@@ -133,7 +131,7 @@ object ConfigError {
       fieldPath: FieldPath,
       detail: String,
       receivedValue: String,
-      annotation: Option[ConfigAnnotation]
+      annotation: ConfigAnnotation
   ): ConfigError =
     ConfigError(
       Invalid(

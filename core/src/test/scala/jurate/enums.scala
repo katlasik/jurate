@@ -76,10 +76,10 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
           .find(_.toString().toLowerCase() == rawLowercased)
           .toRight(
             ConfigError.invalid(
-              path"protocol",
+              ctx.fieldPath,
               "Couldn't find right value for Protocol",
               raw,
-              Some(prop("protocol"))
+              ctx.evaluatedAnnotation
             )
           )
 
@@ -108,7 +108,7 @@ class EnumsSpec extends AnyFlatSpec with Matchers with EitherValues {
         path"bugSeverity",
         "couldn't find case for enum Severity (available values: Error, Warning)",
         "Bad",
-        Some(env("SEV"))
+        env("SEV")
       )
     )
   }

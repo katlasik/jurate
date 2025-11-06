@@ -26,24 +26,27 @@ trait ConfigReader {
 
   /** Attempts to read configuration from annotations in left-to-right order,
    * returning the first successful read. This enables fallback patterns like:
-   * @env("PRIMARY") @env("FALLBACK") @prop("default.value")
+   * @env("PRIMARY") @env("FALLBACK") @prop("default.value"). It returns pair of
+   * annotation that provided the value and the raw value.
    */
   private[jurate] def read(
       fieldPath: FieldPath,
       annotations: Seq[ConfigAnnotation]
-  ): Either[ConfigError, String] = {
+  ): Either[ConfigError, (ConfigAnnotation, String)] = {
 
     @tailrec
-    def iterate(values: Seq[ConfigAnnotation]): Either[ConfigError, String] =
+    def iterate(values: Seq[ConfigAnnotation]): Either[ConfigError, (ConfigAnnotation, String)] =
 
       if values.isEmpty then Left(ConfigError.missing(fieldPath, annotations))
       else
-        val maybeValue = values.head match
+        val annotation = values.head
+
+        val maybeValue = annotation match
           case env(name) => readEnv(name)
           case prop(name) => readProp(name)
 
         maybeValue match
-          case Some(value) => Right(value)
+          case Some(value) => Right((annotation, value))
           case None => iterate(values.tail)
 
     iterate(annotations)

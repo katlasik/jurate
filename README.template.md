@@ -5,8 +5,14 @@
 
 Jurate is a simple Scala 3 library for instantiating case class instances from environment variables and system properties using compile-time derivation. You just need to create a case class with the desired fields and annotate them with `@env` or `@prop`. Then you can load your config using `load` method.
 
+```scala mdoc:invisible
+given jurate.ConfigReader = jurate.ConfigReader.mocked
+  .onEnv("DB_PASSWORD", "pass")
+  .onEnv("DB_USERNAME", "db_reader")
+  .onEnv("HOST", "localhost")
+```
 
-```scala
+```scala mdoc
 import jurate.{*, given}
 
 case class DbConfig(
@@ -23,7 +29,6 @@ case class Config(
 )
 
 println(load[Config])
-// Right(Config(localhost,8080,None,false,DbConfig(Secret(d74ff0ee8d),db_reader)))
 ```
 
 ## Installation
@@ -50,7 +55,7 @@ To load a value into a field from an environment variable, use the `@env` annota
 You can provide multiple annotations to a field. The library will try to load the value from the first annotation on the left, and if it fails, it will try the next one.
 You can also provide a default value for a field, which will be used if the value is not found for any of the annotations.
 
-```scala
+```scala mdoc:compile-only
 case class EmailConfig(
   @prop("debug.email") @env("EMAIL") @env("ADMIN_EMAIL") email: String = "foo@bar.com"
 )
@@ -61,7 +66,7 @@ In this example library will first check if system property `debug.email` exists
 ## Optional values
 You can make field optional by using `Option` type. If the value is not found, the field will be set to `None`.
 
-```scala
+```scala mdoc:compile-only
 case class AdminEmailConfig(
   @env("ADMIN_EMAIL") adminEmail: Option[String],
 )
@@ -70,7 +75,7 @@ case class AdminEmailConfig(
 ## Nested case classes
 You can use nested case classes to organize your config.
 
-```scala
+```scala mdoc:compile-only
 case class DatabaseConfig(
   @env("DB_PASSWORD") password: Secret[String],
   @env("DB_USERNAME") username: String
@@ -86,7 +91,7 @@ case class AppConfig(
 ## Enums
 You can load values of singleton enums (with no fields) using `@env` or `@prop` annotations. The library will automatically convert the loaded value to the enum case. Searching for the right enum case is case-sensitive.
 
-```scala
+```scala mdoc
 enum Environment:
   case DEV, PROD, STAGING
 
@@ -97,7 +102,7 @@ case class EnvConfig(
 
 If you want to customize loading of enum you can provide your own instance of `ConfigDecoder`:
 
-```scala
+```scala mdoc:compile-only
 given ConfigDecoder[Environment] = new ConfigDecoder[Environment]:
   def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Environment] = 
     val rawLowercased = raw.trim().toLowerCase()
@@ -109,7 +114,7 @@ given ConfigDecoder[Environment] = new ConfigDecoder[Environment]:
 ## Subclasses
 The result of loading sealed trait will be first subclass to load successfully.
 
-```scala
+```scala mdoc:compile-only
 sealed trait MessagingConfig
 case class LiveConfig(@env("BROKER_ADDRESS") brokerAddress: String) extends MessagingConfig
 case class TestConfig(@prop("BROKER_NAME" ) brokerName: String) extends MessagingConfig
@@ -118,7 +123,7 @@ case class Config(messaging: MessagingConfig)
 ```
 
 The same works for enums with fields
-```scala
+```scala mdoc:compile-only
 enum MessagingConfig: 
   case LiveConfig(@env("BROKER_ADDRESS") brokerAddress: String)
   case TestConfig(@prop("BROKER_NAME" ) brokerName: String)
@@ -129,14 +134,13 @@ case class Config(messaging: MessagingConfig)
 ## Secret values
 If don't want to expose your secret values in logs or error messages, you can use `Secret` type. It displays a short SHA-256 hash instead of the actual value when printed.
 
-```scala
+```scala mdoc
 case class DbCredsConfig(
   @env("DB_PASSWORD") password: Secret[String],
   @env("DB_USERNAME") username: String
 )
 
 println(load[DbCredsConfig])
-// Right(DbCredsConfig(Secret(d74ff0ee8d),db_reader))
 ```
 
 The `Secret` type shows only the first 10 characters of the SHA-256 hash, which helps with debugging while keeping sensitive data protected.
@@ -144,12 +148,15 @@ The `Secret` type shows only the first 10 characters of the SHA-256 hash, which 
 ## Collections
 You can load comma-separated values into collections. Currently, it's not possible to change separator.
 
+```scala mdoc:invisible:nest
+given jurate.ConfigReader = jurate.ConfigReader.mocked
+  .onEnv("NUMBERS", "1,2,3")
+```
 
-```scala
+```scala mdoc
 case class Numbers(@env("NUMBERS") numbers: List[Int])
 
 println(load[Numbers])
-// Right(Numbers(List(1, 2, 3)))
 ```
 
 With environment variable containing `"1,2,3"` the `result` will contain `Right(Numbers(List(1,2,3)))`.
@@ -188,7 +195,7 @@ Library provides built-in decoders for many common types:
 # Adding custom decoders
 You can add custom decoders for your types by implementing `ConfigDecoder` typeclass:
 
-```scala
+```scala mdoc:compile-only
 class MyClass(val value: String)
 
 given ConfigDecoder[MyClass] with {
@@ -205,7 +212,7 @@ You can override behavior of `load` function by providing instance of `ConfigRea
 For test, you can use mocked ConfigReader:
 
 
-```scala
+```scala mdoc:nest
 case class DbConf(@env("DATABASE_HOST") host: String, @prop("dbpass") password: String)
 
 given ConfigReader = ConfigReader
@@ -214,7 +221,6 @@ given ConfigReader = ConfigReader
   .onProp("dbpass", "mypass")
 
 println(load[DbConf])
-// Right(DbConf(localhost,mypass))
 ```
 
 # Error Handling
@@ -225,7 +231,7 @@ Configuration loading returns an `Either[ConfigError, Config]`. When errors occu
 
 By default, errors use `getMessage` which provides a text-based error list:
 
-```scala
+```scala mdoc:compile-only
 case class AppConfig(
   @env("PORT") port: Int,
   @env("HOST") host: String
@@ -245,7 +251,7 @@ load[AppConfig] match {
 
 For better readability, use `TablePrinter` to display errors in a formatted table:
 
-```scala
+```scala mdoc:compile-only
 import jurate.printers.TablePrinter
 
 load[Config] match {
@@ -266,8 +272,11 @@ load[Config] match {
 
 You can create custom error formatters by implementing the `ErrorPrinter` trait:
 
+```scala mdoc:invisible
+val error = ConfigError(Nil)
+```
 
-```scala
+```scala mdoc:compile-only
 import jurate.ErrorPrinter
 
 object CompactPrinter extends ErrorPrinter {

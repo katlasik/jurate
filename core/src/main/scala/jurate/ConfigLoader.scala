@@ -140,10 +140,10 @@ object ConfigLoader:
                   )
                 else
                   reader.read(fieldPath, fieldMetadata.annotations) match {
-                    case Right(raw) =>
+                    case Right((annotation, raw)) =>
                       decoder.decode(
                         raw,
-                        DecodingContext(fieldMetadata.annotations, fieldPath)
+                        DecodingContext(fieldMetadata.annotations, annotation, fieldPath)
                       )
                     case Left(e) if e.onlyContainsMissing =>
                       fieldMetadata.default match {
