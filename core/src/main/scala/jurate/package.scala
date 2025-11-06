@@ -296,8 +296,9 @@ given ConfigDecoder[FiniteDuration] = ConfigDecoder[Duration].emap {
 
 /** Loads configuration into a case class instance.
   *
-  * This is the main entry point for loading configuration. It requires a ConfigLoader
-  * instance (typically auto-derived) and a ConfigReader (typically the live reader).
+  * This is the main entry point for loading configuration. It requires a
+  * ConfigLoader instance (typically auto-derived) and a ConfigReader (typically
+  * the live reader).
   *
   * Example:
   * {{{
@@ -309,10 +310,14 @@ given ConfigDecoder[FiniteDuration] = ConfigDecoder[Duration].emap {
   * val config: Either[ConfigError, DatabaseConfig] = load[DatabaseConfig]
   * }}}
   *
-  * @tparam C the configuration type to load
-  * @param loader the ConfigLoader instance, typically auto-derived
-  * @param reader the ConfigReader to use for reading configuration sources
-  * @return Either a ConfigError or the loaded configuration instance
+  * @tparam C
+  *   the configuration type to load
+  * @param loader
+  *   the ConfigLoader instance, typically auto-derived
+  * @param reader
+  *   the ConfigReader to use for reading configuration sources
+  * @return
+  *   Either a ConfigError or the loaded configuration instance
   */
 def load[C](using
     @implicitNotFound(
@@ -321,9 +326,10 @@ def load[C](using
     reader: ConfigReader
 ): Either[ConfigError, C] = loader.load(reader, FieldPath.root)
 
-/** Default ConfigReader that reads from system environment variables and properties.
- * This instance is automatically available when you import jurate.{*, given}.
- *
- * For testing, use ConfigReader.mocked to provide custom values.
- */
+/** Default ConfigReader that reads from system environment variables and
+  * properties. This instance is automatically available when you import
+  * jurate.{*, given}.
+  *
+  * For testing, use ConfigReader.mocked to provide custom values.
+  */
 given ConfigReader = LiveConfigReader
