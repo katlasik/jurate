@@ -64,6 +64,7 @@ lazy val docs = (project in file("docs"))
   .settings(
     mdocIn := file("README.template.md"),
     mdocOut := file("README.md"),
+    publish / skip := true
   )
 
 
