@@ -175,22 +175,12 @@ Library provides built-in decoders for many common types:
 **Standard Library Types:**
 - `BigInt`, `BigDecimal`
 - `UUID`
-- `URI`, `URL`
+- `URI`
 - `Path` (java.nio.file.Path)
 - `File` (java.io.File)
-- `FiniteDuration` (scala.concurrent.duration.FiniteDuration)
-- `Duration` (java.time.Duration)
-- `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant` (java.time.*)
-
-**Collections:**
-- `List[T]`, `Seq[T]`, `Vector[T]`, `Set[T]`
-- Any collection with a `T` that has a `ConfigDecoder[T]`
-
-**Special Types:**
+- `FiniteDuration` (scala.concurrent.duration.FiniteDuration), `Duration` (scala.concurrent.duration.Duration)
+- `List[T]`, `Seq[T]`, `Vector[T]`
 - `Option[T]` - returns `None` if value not found
-- `Secret[T]` - wraps sensitive values with hash display
-- Case classes (automatically derived)
-- Sealed traits and enums (automatically derived)
 
 # Adding custom decoders
 You can add custom decoders for your types by implementing `ConfigDecoder` typeclass:
