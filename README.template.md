@@ -190,8 +190,14 @@ class MyClass(val value: String)
 
 given ConfigDecoder[MyClass] with {
   def decode(raw: String, ctx: DecodingContext): Either[ConfigError, MyClass] = {
-    if (raw.isEmpty) Left(ConfigError.invalid(ctx.fieldPath, "Value is empty", raw, ctx.evaluatedAnnotation))
-    else Right(new MyClass(raw))
+    if (raw.isEmpty) 
+      Left(
+        ConfigError.invalid(ctx.fieldPath, "Value is empty", raw, ctx.evaluatedAnnotation)
+      )
+    else 
+      Right(
+        new MyClass(raw)
+      )
   }
 }
 ```
