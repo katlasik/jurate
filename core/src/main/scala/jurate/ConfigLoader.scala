@@ -8,18 +8,23 @@ import scala.compiletime.*
 
 /** Base trait for loading configuration values.
   *
-  * ConfigLoader is the root of the type class hierarchy for configuration loading.
-  * It can be either a [[ConfigDecoder]] (for primitive types) or a [[ConfigHandler]]
-  * (for complex types like case classes).
+  * ConfigLoader is the root of the type class hierarchy for configuration
+  * loading. It can be either a [[ConfigDecoder]] (for primitive types) or a
+  * [[ConfigHandler]] (for complex types like case classes).
   *
-  * @tparam C the type to load configuration into
+  * @tparam C
+  *   the type to load configuration into
   */
 trait ConfigLoader[C] {
+
   /** Loads configuration using the provided reader and field path.
     *
-    * @param reader the ConfigReader to use for reading configuration sources
-    * @param parentFieldPath the path prefix for this configuration field
-    * @return Either a ConfigError or the loaded configuration value
+    * @param reader
+    *   the ConfigReader to use for reading configuration sources
+    * @param parentFieldPath
+    *   the path prefix for this configuration field
+    * @return
+    *   Either a ConfigError or the loaded configuration value
     */
   def load(
       reader: ConfigReader,
@@ -35,8 +40,10 @@ trait ConfigLoader[C] {
 
   /** Converts this loader to a ConfigDecoder if possible.
     *
-    * @return the ConfigDecoder instance
-    * @throws UnsupportedOperationException if this is not a ConfigDecoder
+    * @return
+    *   the ConfigDecoder instance
+    * @throws UnsupportedOperationException
+    *   if this is not a ConfigDecoder
     */
   def asDecoder: ConfigDecoder[C] =
     this match {
@@ -49,33 +56,39 @@ trait ConfigLoader[C] {
 
 }
 
-/** A ConfigLoader implementation for complex types like case classes and sealed traits.
+/** A ConfigLoader implementation for complex types like case classes and sealed
+  * traits.
   *
-  * ConfigHandler wraps a function that knows how to load and compose configuration
-  * from multiple fields recursively.
+  * ConfigHandler wraps a function that knows how to load and compose
+  * configuration from multiple fields recursively.
   *
-  * @param handle function that loads configuration given a reader and field path
-  * @tparam C the type to load configuration into
+  * @param handle
+  *   function that loads configuration given a reader and field path
+  * @tparam C
+  *   the type to load configuration into
   */
 final case class ConfigHandler[C](
     handle: (ConfigReader, FieldPath) => Either[ConfigError, C]
 ) extends ConfigLoader[C]
 
-/** Companion object providing automatic derivation of ConfigLoader instances. */
+/** Companion object providing automatic derivation of ConfigLoader instances.
+  */
 object ConfigLoader:
 
   /** Summons a ConfigLoader instance for type C from implicit scope.
     *
-    * @tparam C the configuration type
-    * @param value the implicit ConfigLoader instance
-    * @return the ConfigLoader instance
+    * @tparam C
+    *   the configuration type
+    * @param value
+    *   the implicit ConfigLoader instance
+    * @return
+    *   the ConfigLoader instance
     */
   def apply[C](using value: ConfigLoader[C]): ConfigLoader[C] = value
 
-  /** Automatically derives a ConfigLoader for types with a Mirror.
-    * This method uses Scala 3 compile-time reflection to automatically derive
-    * ConfigLoader instances for case classes (products) and sealed traits (sums).
-    * Example:
+  /** Automatically derives a ConfigLoader for types with a Mirror. This method
+    * uses Scala 3 compile-time reflection to automatically derive ConfigLoader
+    * instances for case classes (products) and sealed traits (sums). Example:
     * {{{
     * case class DbConfig(
     *   @env("DB_HOST") host: String,
@@ -83,10 +96,12 @@ object ConfigLoader:
     * ) derives ConfigLoader
     * }}}
     *
-    * @tparam A the type to derive a ConfigLoader for
-    * @param mirror the Mirror for type A
-    * @return a derived ConfigLoader instance
-    *
+    * @tparam A
+    *   the type to derive a ConfigLoader for
+    * @param mirror
+    *   the Mirror for type A
+    * @return
+    *   a derived ConfigLoader instance
     */
   inline given derived[A](using mirror: Mirror.Of[A]): ConfigLoader[A] =
     inline mirror match
@@ -140,10 +155,14 @@ object ConfigLoader:
                   )
                 else
                   reader.read(fieldPath, fieldMetadata.annotations) match {
-                    case Right(raw) =>
+                    case Right((annotation, raw)) =>
                       decoder.decode(
                         raw,
-                        DecodingContext(fieldMetadata.annotations, fieldPath)
+                        DecodingContext(
+                          fieldMetadata.annotations,
+                          annotation,
+                          fieldPath
+                        )
                       )
                     case Left(e) if e.onlyContainsMissing =>
                       fieldMetadata.default match {

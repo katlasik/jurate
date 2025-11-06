@@ -26,7 +26,7 @@ private[jurate] object Macros {
     optExpr match
       case Some(e) => '{ Some($e) }
       case None => '{ None }
-  
+
   private[jurate] inline def isSingletonEnum[A] = ${
     isSingletonEnumImpl[A]
   }
@@ -63,7 +63,7 @@ private[jurate] object Macros {
 
     Select.unique(companion, valuesMethod.name).asExprOf[Array[C]]
   }
-  
+
   private[jurate] inline def decoderError[T] = ${
     decoderErrorImpl[T]
   }
@@ -77,7 +77,7 @@ private[jurate] object Macros {
 
     report.errorAndAbort(s"Couldn't find decoder for type $typeName")
   }
-  
+
   private[jurate] inline def fieldMetadata[A] = ${
     fieldMetadataImpl[A]
   }
@@ -141,7 +141,7 @@ private[jurate] object Macros {
     '{
       Map.from($values)
     }
-  
+
   private[jurate] inline def typeName[A] = ${
     typeNameImpl[A]
   }

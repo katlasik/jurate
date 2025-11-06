@@ -4,23 +4,25 @@ import jurate.*
 
 /** An error printer that formats configuration errors as ASCII tables.
   *
-  * This printer creates well-formatted tables with columns for field names, sources
-  * (environment variables or system properties), and error messages. It includes
-  * word wrapping and column width management for readable output.
+  * This printer creates well-formatted tables with columns for field names,
+  * sources (environment variables or system properties), and error messages. It
+  * includes word wrapping and column width management for readable output.
   */
 object TablePrinter extends ErrorPrinter {
 
   private val FieldHeader = "Field"
   private val SourceHeader = "Source"
   private val MessageHeader = "Message"
-  
+
   private case class TableRow(field: String, source: String, message: String)
   private case class ColumnWidths(field: Int, source: Int, message: Int)
 
   /** Formats a configuration error as an ASCII table.
     *
-    * @param error the configuration error to format
-    * @return a formatted table string showing all error reasons
+    * @param error
+    *   the configuration error to format
+    * @return
+    *   a formatted table string showing all error reasons
     */
   override def format(error: ConfigError): String = {
     val rows = error.reasons.map(reasonToRow)
@@ -35,11 +37,10 @@ object TablePrinter extends ErrorPrinter {
         message = "Missing configuration value"
       )
 
-    case Invalid(receivedValue, detail, fieldPath, annotationOpt) =>
+    case Invalid(receivedValue, detail, fieldPath, annotation) =>
       TableRow(
         field = fieldPath.dottedPath,
-        source =
-          annotationOpt.map(ann => formatAnnotations(Seq(ann))).getOrElse(""),
+        source = formatAnnotations(Seq(annotation)),
         message = s"Invalid value: $detail, received: '$receivedValue'"
       )
 
@@ -78,7 +79,7 @@ object TablePrinter extends ErrorPrinter {
     }
 
   private def calculateColumnWidths(rows: List[TableRow]): ColumnWidths = {
-    
+
     val MaxFieldWidth = 60
     val MaxSourceWidth = 80
     val MaxMessageWidth = 150

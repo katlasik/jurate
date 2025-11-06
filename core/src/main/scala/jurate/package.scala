@@ -59,7 +59,7 @@ given ConfigDecoder[Short] with {
           ctx.fieldPath,
           "can't decode short value",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -76,7 +76,7 @@ given ConfigDecoder[Int] with {
           ctx.fieldPath,
           s"can't decode integer",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -93,7 +93,7 @@ given ConfigDecoder[Long] with {
           ctx.fieldPath,
           s"can't decode long",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -110,7 +110,7 @@ given ConfigDecoder[Float] with {
           ctx.fieldPath,
           s"can't decode float value",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -127,7 +127,7 @@ given ConfigDecoder[Double] with {
           ctx.fieldPath,
           s"can't decode double value",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -144,7 +144,7 @@ given ConfigDecoder[BigDecimal] with {
           ctx.fieldPath,
           s"can't decode BigDecimal value",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -161,7 +161,7 @@ given ConfigDecoder[BigInt] with {
           ctx.fieldPath,
           s"can't decode BigInt value",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -178,7 +178,7 @@ given ConfigDecoder[InetAddress] with {
           ctx.fieldPath,
           s"can't decode InetAddress value: ${e.getMessage}",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -195,7 +195,7 @@ given ConfigDecoder[UUID] with {
           ctx.fieldPath,
           s"can't decode UUID value: ${e.getMessage}",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -212,7 +212,7 @@ given ConfigDecoder[Path] with {
           ctx.fieldPath,
           s"can't decode Path value: ${e.getMessage}",
           raw,
-          ctx.annotations.headOption
+          ctx.evaluatedAnnotation
         )
       )
 }
@@ -240,7 +240,7 @@ given ConfigDecoder[Boolean] with {
             ctx.fieldPath,
             s"can't decode boolean value",
             raw,
-            ctx.annotations.headOption
+            ctx.evaluatedAnnotation
           )
         )
 }
@@ -258,7 +258,7 @@ given ConfigDecoder[URI] with {
             ctx.fieldPath,
             s"can't decode URI value: ${e.getMessage}",
             raw,
-            ctx.annotations.headOption
+            ctx.evaluatedAnnotation
           )
         )
 }
@@ -276,7 +276,7 @@ given ConfigDecoder[Duration] with {
             ctx.fieldPath,
             s"can't decode Duration value: ${e.getMessage}",
             raw,
-            ctx.annotations.headOption
+            ctx.evaluatedAnnotation
           )
         )
 }
@@ -289,15 +289,16 @@ given ConfigDecoder[FiniteDuration] = ConfigDecoder[Duration].emap {
         ctx.fieldPath,
         s"expected finite duration but got infinite",
         raw,
-        ctx.annotations.headOption
+        ctx.evaluatedAnnotation
       )
     )
 }
 
 /** Loads configuration into a case class instance.
   *
-  * This is the main entry point for loading configuration. It requires a ConfigLoader
-  * instance (typically auto-derived) and a ConfigReader (typically the live reader).
+  * This is the main entry point for loading configuration. It requires a
+  * ConfigLoader instance (typically auto-derived) and a ConfigReader (typically
+  * the live reader).
   *
   * Example:
   * {{{
@@ -309,10 +310,14 @@ given ConfigDecoder[FiniteDuration] = ConfigDecoder[Duration].emap {
   * val config: Either[ConfigError, DatabaseConfig] = load[DatabaseConfig]
   * }}}
   *
-  * @tparam C the configuration type to load
-  * @param loader the ConfigLoader instance, typically auto-derived
-  * @param reader the ConfigReader to use for reading configuration sources
-  * @return Either a ConfigError or the loaded configuration instance
+  * @tparam C
+  *   the configuration type to load
+  * @param loader
+  *   the ConfigLoader instance, typically auto-derived
+  * @param reader
+  *   the ConfigReader to use for reading configuration sources
+  * @return
+  *   Either a ConfigError or the loaded configuration instance
   */
 def load[C](using
     @implicitNotFound(
@@ -321,9 +326,10 @@ def load[C](using
     reader: ConfigReader
 ): Either[ConfigError, C] = loader.load(reader, FieldPath.root)
 
-/** Default ConfigReader that reads from system environment variables and properties.
- * This instance is automatically available when you import jurate.{*, given}.
- *
- * For testing, use ConfigReader.mocked to provide custom values.
- */
+/** Default ConfigReader that reads from system environment variables and
+  * properties. This instance is automatically available when you import
+  * jurate.{*, given}.
+  *
+  * For testing, use ConfigReader.mocked to provide custom values.
+  */
 given ConfigReader = LiveConfigReader

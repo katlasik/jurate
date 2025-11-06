@@ -71,7 +71,7 @@ class SimpleSpec extends AnyFlatSpec with Matchers with EitherValues {
         FieldPath("port"),
         "can't decode integer",
         "bad",
-        Some(env("PORT"))
+        env("PORT")
       )
     )
   }

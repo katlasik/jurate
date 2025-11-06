@@ -14,6 +14,8 @@ ThisBuild / scalacOptions ++= Seq(
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 
+
+
 inThisBuild(
   List(
     organization := "io.github.katlasik",
@@ -55,8 +57,18 @@ lazy val integrationTests = (project in file("integration-tests"))
     publish / skip := true
   )
 
+
+lazy val docs = (project in file("docs"))
+  .enablePlugins(MdocPlugin)
+  .dependsOn(core, examples, integrationTests)
+  .settings(
+    mdocIn := file("README.template.md"),
+    mdocOut := file("README.md"),
+  )
+
+
 lazy val root = (project in file("."))
-  .aggregate(core, examples, integrationTests)
+  .aggregate(core, examples, integrationTests, docs)
   .settings(
     name := "root",
     publish / skip := true

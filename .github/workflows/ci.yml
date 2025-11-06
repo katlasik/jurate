@@ -23,6 +23,9 @@ jobs:
       - name: Verify code format
         run: sbt scalafmtCheckAll
 
+      - name: Verify mdoc
+        run: sbt "mdoc --check"
+
       - name: Compile
         run: sbt compile examples/compile integrationTests/compile integrationTests/Test/compile Test/compile
 

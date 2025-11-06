@@ -126,7 +126,7 @@ class CaseClassSpec extends AnyFlatSpec with Matchers with EitherValues {
         path"httpConfig.port",
         "can't decode integer",
         "Bad",
-        Some(env("PORT"))
+        env("PORT")
       )
     )
   }
