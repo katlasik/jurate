@@ -286,9 +286,19 @@ error.print(using CompactPrinter)
 ```
 
 # Examples
-You can find more examples under [src/examples](./src/examples/scala). 
+You can find more examples under [src/examples](./src/examples/scala).
 You can run them using `sbt "examples/runMain <example-class>"` command (set necessary environment variables first). For instance:
 
 ```bash
 sbt "examples/runMain jurate.simpleApp"
 ```
+
+# Contributing
+
+Contributions are welcome!
+
+**Note:** `README.md` is automatically generated from `README.template.md` - please make documentation changes in the template file only.
+
+# License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
