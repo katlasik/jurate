@@ -99,11 +99,12 @@ If you want to customize loading of enum you can provide your own instance of `C
 
 ```scala
 given ConfigDecoder[Environment] = new ConfigDecoder[Environment]:
-  def decode(raw: String, ctx: DecodingContext): Either[ConfigError, Environment] = 
+  def decode(raw: String): Either[String, Environment] =
     val rawLowercased = raw.trim().toLowerCase()
-    Environment.values
+    Environment
+      .values
       .find(_.toString().toLowerCase() == rawLowercased)
-      .toRight(ConfigError.invalid(ctx.fieldPath, s"Couldn't find right value for Environment", raw, ctx.evaluatedAnnotation))
+      .toRight(s"Couldn't find right value for Environment: $raw")
 ```
 
 ## Subclasses
@@ -182,15 +183,11 @@ You can add custom decoders for your types by implementing `ConfigDecoder` typec
 class MyClass(val value: String)
 
 given ConfigDecoder[MyClass] with {
-  def decode(raw: String, ctx: DecodingContext): Either[ConfigError, MyClass] = {
-    if (raw.isEmpty) 
-      Left(
-        ConfigError.invalid(ctx.fieldPath, "Value is empty", raw, ctx.evaluatedAnnotation)
-      )
-    else 
-      Right(
-        new MyClass(raw)
-      )
+  def decode(raw: String): Either[String, MyClass] = {
+    if (raw.isEmpty)
+      Left("Value is empty")
+    else
+      Right(new MyClass(raw))
   }
 }
 ```

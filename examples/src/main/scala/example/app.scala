@@ -2,8 +2,19 @@ package example
 
 import jurate.{*, given}
 
+import java.time.LocalTime
+
 enum Environment {
   case DEV, PROD, STAGING
+}
+
+given ConfigDecoder[LocalTime] with {
+  override def decode(
+      raw: String
+  ): Either[String, LocalTime] = try Right(LocalTime.parse(raw))
+  catch
+    case _: Exception =>
+      Left("can't decode LocalTime value")
 }
 
 case class DbConfig(
@@ -17,7 +28,8 @@ case class Config(
     @env("PORT") port: Int,
     @env("HOST") host: String = "localhost",
     dbConfig: DbConfig,
-    @env("ENV") env: Environment
+    @env("ENV") env: Environment,
+    @env("MAINTENANCE_WINDOW") maintenanceWindow: Option[LocalTime]
 )
 
 @main def simpleApp(): Unit = {

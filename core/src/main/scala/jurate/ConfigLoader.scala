@@ -120,7 +120,8 @@ object ConfigLoader:
           fieldMetadata[T],
           reader,
           parentFieldPath
-        )
+        ),
+        _ ++ _
       ).map(v => product.fromProduct(Tuple.fromArray(v.toArray)))
     )
 
@@ -156,14 +157,17 @@ object ConfigLoader:
                 else
                   reader.read(fieldPath, fieldMetadata.annotations) match {
                     case Right((annotation, raw)) =>
-                      decoder.decode(
-                        raw,
-                        DecodingContext(
-                          fieldMetadata.annotations,
-                          annotation,
-                          fieldPath
+                      decoder
+                        .decode(raw)
+                        .left
+                        .map(
+                          ConfigError.invalid(
+                            fieldPath,
+                            _,
+                            raw,
+                            annotation
+                          )
                         )
-                      )
                     case Left(e) if e.onlyContainsMissing =>
                       fieldMetadata.default match {
                         case Some(d) => Right(d)
@@ -243,7 +247,8 @@ object ConfigLoader:
                 fieldMetadata[subtype],
                 reader,
                 fieldPath
-              )
+              ),
+              _ ++ _
             ).map(v =>
               product.fromProduct(Tuple.fromArray(v.toArray)).asInstanceOf[T]
             )
